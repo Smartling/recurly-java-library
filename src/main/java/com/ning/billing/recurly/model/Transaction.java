@@ -24,6 +24,57 @@ import org.joda.time.DateTime;
 @XmlRootElement(name = "transaction")
 public class Transaction extends AbstractTransaction {
 
+    public static final String STATE_PARAMETER_NAME = "state";
+    public static enum State
+    {
+        SUCCESSFUL, FAILED, VOIDED;
+
+        private static final String SUCCESSFUL_PARAMETER_VALUE = "successful";
+        private static final String FAILED_PARAMETER_VALUE = "failed";
+        private static final String VOIDED_PARAMETER_VALUE = "voided";
+
+        public static String getStringValue(State state)
+        {
+            switch(state)
+            {
+                case SUCCESSFUL:
+                    return SUCCESSFUL_PARAMETER_VALUE;
+                case FAILED:
+                    return FAILED_PARAMETER_VALUE;
+                case VOIDED:
+                    return VOIDED_PARAMETER_VALUE;
+                default:
+                    return null;
+            }
+        }
+    };
+
+    public static final String TYPE_PARAMETER_NAME = "type";
+
+    public static enum Type
+    {
+        AUTHORIZATION, REFUND, PURCHASE;
+
+        private static final String AUTHORIZATION_PARAMETER_VALUE = "authorization";
+        private static final String REFUND_PARAMETER_VALUE = "refund";
+        private static final String PURCHASE_PARAMETER_VALUE = "purchase";
+
+        public static String getStringValue(Type type)
+        {
+            switch(type)
+            {
+                case AUTHORIZATION:
+                    return AUTHORIZATION_PARAMETER_VALUE;
+                case REFUND:
+                    return REFUND_PARAMETER_VALUE;
+                case PURCHASE:
+                    return PURCHASE_PARAMETER_VALUE;
+                default:
+                    return null;
+            }
+        }
+    };
+
     @XmlElement(name = "account")
     private Account account;
 

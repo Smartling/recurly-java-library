@@ -18,6 +18,8 @@ package com.ning.billing.recurly;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -61,6 +63,9 @@ public class RecurlyClient {
 
     public static final String FETCH_RESOURCE = "/recurly_js/result";
 
+    private static final String PAGING_ITEMS_PER_PAGE_PARAMETER_NAME = "per_page";
+    private static final String PARAMETER_DELIMITER = "&";
+
     /**
      * Checks a system property to see if debugging output is
      * required. Used internally by the client to decide whether to
@@ -69,6 +74,37 @@ public class RecurlyClient {
     private static boolean debug() {
         return Boolean.getBoolean(RECURLY_DEBUG_KEY);
     }
+
+    private class UrlParameterList
+    {
+        private List<String> parameterListHolder;
+
+        public UrlParameterList()
+        {
+            parameterListHolder = new ArrayList<String>();
+        }
+
+        public void addParameter(String parameterName,String parameterValue)
+        {
+            parameterListHolder.add(parameterName + "=" + parameterValue);
+        }
+
+        public String getUrlParameterString()
+        {
+            boolean isItFirst = true;
+            StringBuffer stringBuffer = new StringBuffer();
+            for (String parameterNameValuePair : parameterListHolder)
+            {
+                if (!isItFirst)
+                    stringBuffer.append(PARAMETER_DELIMITER);
+                stringBuffer.append(parameterNameValuePair);
+                isItFirst = false;
+            }
+
+            return stringBuffer.toString();
+        }
+    }
+
 
     /**
      * Returns the page Size to use when querying. The page size
@@ -356,6 +392,37 @@ public class RecurlyClient {
     }
 
     /**
+     * Lookup an account's transactions history by type and state
+     * <p/>
+     * Returns the account's transaction history
+     *
+     * @param accountCode recurly account id
+     * @return the transaction history associated with this account on success, null otherwise
+     */
+    public Transactions getAccountTransactions(final String accountCode, final TransactionFilter transactionFilter, PagingParams pagingParams) {
+
+        UrlParameterList urlParameterList = new UrlParameterList();
+
+        if (null != transactionFilter)
+        {
+            if (null != transactionFilter.getState())
+                urlParameterList.addParameter(Transaction.STATE_PARAMETER_NAME, Transaction.State.getStringValue(transactionFilter.getState()));
+
+            if (null != transactionFilter.getType())
+                urlParameterList.addParameter(Transaction.TYPE_PARAMETER_NAME , Transaction.Type.getStringValue(transactionFilter.getType()));
+        }
+
+        if (null != pagingParams)
+        {
+            urlParameterList.addParameter(PAGING_ITEMS_PER_PAGE_PARAMETER_NAME, Integer.toString(pagingParams.getItemsPerPage()));
+//            urlParameterList.addParameter(PAGING_PAGE_ID_PARAMETER_NAME, Integer.toString(pagingParams.getPageId()));
+        }
+        String parameters = urlParameterList.getUrlParameterString();
+
+        return doGET(Accounts.ACCOUNTS_RESOURCE + "/" + accountCode + Transactions.TRANSACTIONS_RESOURCE, parameters, Transactions.class);
+    }
+
+    /**
      * Creates a {@link Transaction} throgh the Recurly API.
      *
      * @param trans The {@link Transaction} to create
@@ -579,6 +646,19 @@ public class RecurlyClient {
         }
         return callRecurlySafe(client.prepareGet(url.toString()), clazz);
     }
+
+    private <T> T doGET(final String resource, final String parameters, final Class<T> clazz) {
+        final StringBuffer url = new StringBuffer(baseUrl);
+        url.append(resource);
+        url.append("?");
+        url.append(parameters);
+
+        if (debug()) {
+            log.info("Msg to Recurly API [GET] :: URL : {}", url);
+        }
+        return callRecurlySafe(client.prepareGet(url.toString()), clazz);
+    }
+
 
     private <T> T doPOST(final String resource, final RecurlyObject payload, final Class<T> clazz) {
         final String xmlPayload;
