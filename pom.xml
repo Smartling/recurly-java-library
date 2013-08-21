@@ -28,7 +28,7 @@
     <version>0.1.6-SNAPSHOT</version>
     <name>Recurly Java library</name>
     <description>Java library for Recurly</description>
-    <url>http://github.com/SmartLing/recurly-java-library</url>
+    <url>http://github.com/Smartling/recurly-java-library</url>
 <!--    <url>http://smartling.com</url>-->
     <inceptionYear>2012</inceptionYear>
     <licenses>
@@ -539,6 +539,7 @@
     </mailingLists>
     <issueManagement>
         <system>Github</system>
-        <url>http://github.com/killbilling/recurly-java-library</url>
+        <!--<url>http://github.com/killbilling/recurly-java-library</url>-->
+        <url>http://github.com/Smartling/recurly-java-library</url>
     </issueManagement>
 </project>
