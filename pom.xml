@@ -22,12 +22,14 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ning.billing</groupId>
+    <!--<groupId>com.smartling</groupId>-->
     <artifactId>recurly-java-library</artifactId>
     <packaging>jar</packaging>
     <version>0.1.6-SNAPSHOT</version>
     <name>Recurly Java library</name>
     <description>Java library for Recurly</description>
     <url>http://github.com/SmartLing/recurly-java-library</url>
+<!--    <url>http://smartling.com</url>-->
     <inceptionYear>2012</inceptionYear>
     <licenses>
         <license>
@@ -58,8 +60,10 @@
     </developers>
     <scm>
         <!--<connection>scm:git:git://github.com/killbilling/recurly-java-library.git</connection>-->
-        <connection>https://github.com/Smartling/recurly-java-library</connection>
+        <connection>scm:git:git://github.com/Smartling/recurly-java-library.git</connection>
+        <!--<connection>https://github.com/Smartling/recurly-java-library</connection>-->
         <!--<developerConnection>scm:git:git@github.com:killbilling/recurly-java-library.git</developerConnection>-->
+        <developerConnection>scm:git:git@github.com:Smartling/recurly-java-library.git</developerConnection>
         <!--<url>http://github.com/killbilling/recurly-java-library/tree/master</url>-->
         <url>https://github.com/Smartling/recurly-java-library</url>
     </scm>
