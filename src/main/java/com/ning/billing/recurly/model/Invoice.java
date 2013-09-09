@@ -16,16 +16,22 @@
 
 package com.ning.billing.recurly.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
+import java.util.regex.Matcher;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import javax.xml.bind.annotation.XmlTransient;
 import org.joda.time.DateTime;
 
 @XmlRootElement(name = "invoice")
 public class Invoice extends RecurlyObject {
+
+    @XmlTransient
+    private String href;
 
     @XmlElement(name = "account")
     private Account account;
@@ -170,6 +176,15 @@ public class Invoice extends RecurlyObject {
 
     public void setTransactions(final List<Transaction> transactions) {
         this.transactions = transactions;
+    }
+
+    @JsonIgnore
+    public String getHref() {
+        return href;
+    }
+
+    public void setHref(final Object href) {
+        this.href = stringOrNull(href);
     }
 
     @Override

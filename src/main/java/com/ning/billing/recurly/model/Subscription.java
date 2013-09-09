@@ -18,11 +18,17 @@ package com.ning.billing.recurly.model;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @XmlRootElement(name = "subscription")
 public class Subscription extends AbstractSubscription {
+
+    @XmlTransient
+    private String href;
 
     @XmlElement(name = "account")
     private Account account;
@@ -156,6 +162,16 @@ public class Subscription extends AbstractSubscription {
         this.trialEndsAt = dateTimeOrNull(trialEndsAt);
     }
 
+    @JsonIgnore
+    public String getHref() {
+        return href;
+    }
+
+    public void setHref(final Object href) {
+        this.href = stringOrNull(href);
+    }
+
+    @JsonIgnore
     public boolean isInTrial() {
         return null != getTrialEndsAt() && getTrialEndsAt().equals(getCurrentPeriodEndsAt());
     }

@@ -16,13 +16,16 @@
 
 package com.ning.billing.recurly.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * @author Kristian.foster@gmail.com
  */
-@XmlRootElement(name = "transaction")
+@XmlRootElement(name = "transactions")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Transactions extends RecurlyObjects<Transaction> {
 
     @XmlTransient
