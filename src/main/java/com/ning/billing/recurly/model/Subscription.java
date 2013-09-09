@@ -156,6 +156,10 @@ public class Subscription extends AbstractSubscription {
         this.trialEndsAt = dateTimeOrNull(trialEndsAt);
     }
 
+    public boolean isInTrial() {
+        return null != getTrialEndsAt() && getTrialEndsAt().equals(getCurrentPeriodEndsAt());
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
