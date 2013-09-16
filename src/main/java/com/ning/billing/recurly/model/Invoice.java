@@ -166,7 +166,7 @@ public class Invoice extends RecurlyObject {
         return adjustments;
     }
 
-    public void setLineItems(final List<Adjustment> lineItems) {
+    public void setLineItems(final List<Adjustment> adjustments) {
         this.adjustments = adjustments;
     }
 
