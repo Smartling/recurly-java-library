@@ -97,6 +97,9 @@ public class Transaction extends AbstractTransaction {
     @XmlElement(name = "created_at")
     private DateTime createdAt;
 
+    @XmlElement(name = "description")
+    private String description;
+
     public Account getAccount() {
         return account;
     }
@@ -153,6 +156,14 @@ public class Transaction extends AbstractTransaction {
         this.createdAt = dateTimeOrNull(createdAt);
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -171,6 +182,7 @@ public class Transaction extends AbstractTransaction {
         sb.append(", voidable=").append(voidable);
         sb.append(", refundable=").append(refundable);
         sb.append(", createdAt=").append(createdAt);
+        sb.append(", description=").append(description);
         sb.append('}');
         return sb.toString();
     }
