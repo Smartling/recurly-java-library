@@ -25,6 +25,13 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import javax.xml.bind.DatatypeConverter;
 
+import com.ning.billing.recurly.exceptions.RequestException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +51,8 @@ import com.ning.billing.recurly.model.SubscriptionUpdate;
 import com.ning.billing.recurly.model.Subscriptions;
 import com.ning.billing.recurly.model.Transaction;
 import com.ning.billing.recurly.model.Transactions;
-import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -55,7 +60,6 @@ public class RecurlyClient {
 
     private static final Logger log = LoggerFactory.getLogger(RecurlyClient.class);
 
-    public static final String RECURLY_DEBUG_KEY = "recurly.debug";
     public static final String RECURLY_PAGE_SIZE_KEY = "recurly.page.size";
 
     private static final Integer DEFAULT_PAGE_SIZE = 20;
@@ -65,15 +69,6 @@ public class RecurlyClient {
 
     private static final String PAGING_ITEMS_PER_PAGE_PARAMETER_NAME = "per_page";
     private static final String PARAMETER_DELIMITER = "&";
-
-    /**
-     * Checks a system property to see if debugging output is
-     * required. Used internally by the client to decide whether to
-     * generate debug output
-     */
-    private static boolean debug() {
-        return Boolean.getBoolean(RECURLY_DEBUG_KEY);
-    }
 
     private class UrlParameterList
     {
@@ -92,16 +87,16 @@ public class RecurlyClient {
         public String getUrlParameterString()
         {
             boolean isItFirst = true;
-            StringBuffer stringBuffer = new StringBuffer();
+            StringBuilder parameters = new StringBuilder();
             for (String parameterNameValuePair : parameterListHolder)
             {
                 if (!isItFirst)
-                    stringBuffer.append(PARAMETER_DELIMITER);
-                stringBuffer.append(parameterNameValuePair);
+                    parameters.append(PARAMETER_DELIMITER);
+                parameters.append(parameterNameValuePair);
                 isItFirst = false;
             }
 
-            return stringBuffer.toString();
+            return parameters.toString();
         }
     }
 
@@ -165,7 +160,8 @@ public class RecurlyClient {
      * @param account account object
      * @return the newly created account object on success, null otherwise
      */
-    public Account createAccount(final Account account) {
+    public Account createAccount(final Account account)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Account.ACCOUNT_RESOURCE, account, Account.class);
     }
 
@@ -176,11 +172,11 @@ public class RecurlyClient {
      *
      * @return account object on success, null otherwise
      */
-    public Accounts getAccounts() {
+    public Accounts getAccounts() throws IOException, RequestException {
         return doGET(Accounts.ACCOUNTS_RESOURCE, Accounts.class);
     }
 
-    public Coupons getCoupons() {
+    public Coupons getCoupons() throws IOException, RequestException {
         return doGET(Coupons.COUPONS_RESOURCE, Coupons.class);
     }
 
@@ -192,7 +188,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return account object on success, null otherwise
      */
-    public Account getAccount(final String accountCode) {
+    public Account getAccount(final String accountCode) throws IOException, RequestException {
         return doGET(Account.ACCOUNT_RESOURCE + "/" + accountCode, Account.class);
     }
 
@@ -205,7 +201,7 @@ public class RecurlyClient {
      * @param account     account object
      * @return the updated account object on success, null otherwise
      */
-    public Account updateAccount(final String accountCode, final Account account) {
+    public Account updateAccount(final String accountCode, final Account account) throws IOException, RequestException {
         return doPUT(Account.ACCOUNT_RESOURCE + "/" + accountCode, account, Account.class);
     }
 
@@ -217,7 +213,7 @@ public class RecurlyClient {
      *
      * @param accountCode recurly account id
      */
-    public void closeAccount(final String accountCode) {
+    public void closeAccount(final String accountCode) throws IOException, RequestException {
         doDELETE(Account.ACCOUNT_RESOURCE + "/" + accountCode);
     }
 
@@ -231,7 +227,8 @@ public class RecurlyClient {
      * @param subscription Subscription object
      * @return the newly created Subscription object on success, null otherwise
      */
-    public Subscription createSubscription(final Subscription subscription) {
+    public Subscription createSubscription(final Subscription subscription)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Subscription.SUBSCRIPTION_RESOURCE,
                       subscription, Subscription.class);
     }
@@ -244,7 +241,7 @@ public class RecurlyClient {
      * @param uuid UUID of the subscription to lookup
      * @return Subscriptions for the specified user
      */
-    public Subscription getSubscription(final String uuid) {
+    public Subscription getSubscription(final String uuid) throws IOException, RequestException {
         return doGET(Subscriptions.SUBSCRIPTIONS_RESOURCE
                      + "/" + uuid,
                      Subscription.class);
@@ -258,7 +255,7 @@ public class RecurlyClient {
      * @param subscription Subscription object
      * @return -?-
      */
-    public Subscription cancelSubscription(final Subscription subscription) {
+    public Subscription cancelSubscription(final Subscription subscription) throws IOException, RequestException {
         return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscription.getUuid() + "/cancel",
                      subscription, Subscription.class);
     }
@@ -271,7 +268,7 @@ public class RecurlyClient {
      * @param subscription Subscription object
      * @return -?-
      */
-    public Subscription reactivateSubscription(final Subscription subscription) {
+    public Subscription reactivateSubscription(final Subscription subscription) throws IOException, RequestException {
         return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscription.getUuid() + "/reactivate",
                      subscription, Subscription.class);
     }
@@ -284,7 +281,8 @@ public class RecurlyClient {
      * @param uuid UUID of the subscription to update
      * @return Subscription the updated subscription
      */
-    public Subscription updateSubscription(final String uuid, final SubscriptionUpdate subscriptionUpdate) {
+    public Subscription updateSubscription(final String uuid, final SubscriptionUpdate subscriptionUpdate)
+            throws IOException, RequestException {
         return doPUT(Subscriptions.SUBSCRIPTIONS_RESOURCE
                      + "/" + uuid,
                      subscriptionUpdate,
@@ -299,7 +297,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return Subscriptions for the specified user
      */
-    public Subscriptions getAccountSubscriptions(final String accountCode) {
+    public Subscriptions getAccountSubscriptions(final String accountCode) throws IOException, RequestException {
         return doGET(Account.ACCOUNT_RESOURCE
                      + "/" + accountCode
                      + Subscriptions.SUBSCRIPTIONS_RESOURCE,
@@ -315,7 +313,8 @@ public class RecurlyClient {
      * @param status      Only accounts in this status will be returned
      * @return Subscriptions for the specified user
      */
-    public Subscriptions getAccountSubscriptions(final String accountCode, final String status) {
+    public Subscriptions getAccountSubscriptions(final String accountCode, final String status)
+            throws IOException, RequestException {
         return doGET(Account.ACCOUNT_RESOURCE
                      + "/" + accountCode
                      + Subscriptions.SUBSCRIPTIONS_RESOURCE
@@ -342,7 +341,7 @@ public class RecurlyClient {
      * @param billingInfo billing info object to create or update
      * @return the newly created or update billing info object on success, null otherwise
      */
-    public BillingInfo createOrUpdateBillingInfo(final BillingInfo billingInfo) {
+    public BillingInfo createOrUpdateBillingInfo(final BillingInfo billingInfo) throws IOException, RequestException {
         final String accountCode = billingInfo.getAccount().getAccountCode();
         // Unset it to avoid confusing Recurly
         billingInfo.setAccount(null);
@@ -358,7 +357,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return the current billing info object associated with this account on success, null otherwise
      */
-    public BillingInfo getBillingInfo(final String accountCode) {
+    public BillingInfo getBillingInfo(final String accountCode) throws IOException, RequestException {
         return doGET(Account.ACCOUNT_RESOURCE + "/" + accountCode + BillingInfo.BILLING_INFO_RESOURCE,
                      BillingInfo.class);
     }
@@ -371,7 +370,7 @@ public class RecurlyClient {
      *
      * @param accountCode recurly account id
      */
-    public void clearBillingInfo(final String accountCode) {
+    public void clearBillingInfo(final String accountCode) throws IOException, RequestException {
         doDELETE(Account.ACCOUNT_RESOURCE + "/" + accountCode + BillingInfo.BILLING_INFO_RESOURCE);
     }
 
@@ -386,7 +385,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return the transaction history associated with this account on success, null otherwise
      */
-    public Transactions getAccountTransactions(final String accountCode) {
+    public Transactions getAccountTransactions(final String accountCode) throws IOException, RequestException {
         return doGET(Accounts.ACCOUNTS_RESOURCE + "/" + accountCode + Transactions.TRANSACTIONS_RESOURCE,
                      Transactions.class);
     }
@@ -399,7 +398,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return the transaction history associated with this account on success, null otherwise
      */
-    public Transactions getAccountTransactions(final String accountCode, final TransactionFilter transactionFilter, PagingParams pagingParams) {
+    public Transactions getAccountTransactions(final String accountCode, final TransactionFilter transactionFilter, PagingParams pagingParams) throws IOException, RequestException {
 
         UrlParameterList urlParameterList = new UrlParameterList();
 
@@ -428,7 +427,8 @@ public class RecurlyClient {
      * @param trans The {@link Transaction} to create
      * @return The created {@link Transaction} object
      */
-    public Transaction createTransaction(final Transaction trans) {
+    public Transaction createTransaction(final Transaction trans)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Transactions.TRANSACTIONS_RESOURCE, trans, Transaction.class);
     }
 
@@ -443,7 +443,7 @@ public class RecurlyClient {
      * @param accountCode recurly account id
      * @return the invoices associated with this account on success, null otherwise
      */
-    public Invoices getAccountInvoices(final String accountCode) {
+    public Invoices getAccountInvoices(final String accountCode) throws IOException, RequestException {
         return doGET(Accounts.ACCOUNTS_RESOURCE + "/" + accountCode + Invoices.INVOICES_RESOURCE,
                      Invoices.class);
     }
@@ -456,7 +456,7 @@ public class RecurlyClient {
      * @param invoiceId recurly invoice id
      * @return the invoices associated with this account on success, null otherwise
      */
-    public Invoice getInvoice(final Integer invoiceId) {
+    public Invoice getInvoice(final Integer invoiceId) throws IOException, RequestException {
         return doGET(Invoices.INVOICES_RESOURCE + "/" + invoiceId.toString(),
                 Invoice.class);
     }
@@ -470,7 +470,8 @@ public class RecurlyClient {
      * @param plan The plan to create on recurly
      * @return the plan object as identified by the passed in ID
      */
-    public Plan createPlan(final Plan plan) {
+    public Plan createPlan(final Plan plan)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Plan.PLANS_RESOURCE, plan, Plan.class);
     }
 
@@ -481,7 +482,7 @@ public class RecurlyClient {
      * @param planCode recurly id of plan
      * @return the plan object as identified by the passed in ID
      */
-    public Plan getPlan(final String planCode) {
+    public Plan getPlan(final String planCode) throws IOException, RequestException {
         return doGET(Plan.PLANS_RESOURCE + "/" + planCode, Plan.class);
     }
 
@@ -491,7 +492,7 @@ public class RecurlyClient {
      *
      * @return the plan object as identified by the passed in ID
      */
-    public Plans getPlans() {
+    public Plans getPlans() throws IOException, RequestException {
         return doGET(Plans.PLANS_RESOURCE, Plans.class);
     }
 
@@ -501,7 +502,7 @@ public class RecurlyClient {
      *
      * @param planCode The {@link Plan} object to delete.
      */
-    public void deletePlan(final String planCode) {
+    public void deletePlan(final String planCode) throws IOException, RequestException {
         doDELETE(Plan.PLANS_RESOURCE +
                  "/" +
                  planCode);
@@ -517,7 +518,8 @@ public class RecurlyClient {
      * @param addOn    The {@link AddOn} to create within recurly
      * @return the {@link AddOn} object as identified by the passed in object
      */
-    public AddOn createPlanAddOn(final String planCode, final AddOn addOn) {
+    public AddOn createPlanAddOn(final String planCode, final AddOn addOn)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Plan.PLANS_RESOURCE +
                       "/" +
                       planCode +
@@ -533,7 +535,7 @@ public class RecurlyClient {
      * @param planCode  recurly id of {@link Plan}
      * @return the {@link AddOn} object as identified by the passed in plan and add-on IDs
      */
-    public AddOn getAddOn(final String planCode, final String addOnCode) {
+    public AddOn getAddOn(final String planCode, final String addOnCode) throws IOException, RequestException {
         return doGET(Plan.PLANS_RESOURCE +
                      "/" +
                      planCode +
@@ -548,7 +550,7 @@ public class RecurlyClient {
      *
      * @return the {@link AddOn} objects as identified by the passed plan ID
      */
-    public AddOn getAddOns(final String planCode) {
+    public AddOn getAddOns(final String planCode) throws IOException, RequestException {
         return doGET(Plan.PLANS_RESOURCE +
                      "/" +
                      planCode +
@@ -562,7 +564,7 @@ public class RecurlyClient {
      * @param planCode  The {@link Plan} object.
      * @param addOnCode The {@link AddOn} object to delete.
      */
-    public void deleteAddOn(final String planCode, final String addOnCode) {
+    public void deleteAddOn(final String planCode, final String addOnCode) throws IOException, RequestException {
         doDELETE(Plan.PLANS_RESOURCE +
                  "/" +
                  planCode +
@@ -580,7 +582,8 @@ public class RecurlyClient {
      * @param coupon The coupon to create on recurly
      * @return the {@link Coupon} object
      */
-    public Coupon createCoupon(final Coupon coupon) {
+    public Coupon createCoupon(final Coupon coupon)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
         return doPOST(Coupon.COUPON_RESOURCE, coupon, Coupon.class);
     }
 
@@ -591,7 +594,7 @@ public class RecurlyClient {
      * @param couponCode The code for the {@link Coupon}
      * @return The {@link Coupon} object as identified by the passed in code
      */
-    public Coupon getCoupon(final String couponCode) {
+    public Coupon getCoupon(final String couponCode) throws IOException, RequestException {
         return doGET(Coupon.COUPON_RESOURCE + "/" + couponCode, Coupon.class);
     }
 
@@ -609,7 +612,7 @@ public class RecurlyClient {
      * @param recurlyToken token given by recurly.js
      * @return subscription object on success, null otherwise
      */
-    public Subscription fetchSubscription(final String recurlyToken) {
+    public Subscription fetchSubscription(final String recurlyToken) throws IOException, RequestException {
         return fetch(recurlyToken, Subscription.class);
     }
 
@@ -621,7 +624,7 @@ public class RecurlyClient {
      * @param recurlyToken token given by recurly.js
      * @return billing info object on success, null otherwise
      */
-    public BillingInfo fetchBillingInfo(final String recurlyToken) {
+    public BillingInfo fetchBillingInfo(final String recurlyToken) throws IOException, RequestException {
         return fetch(recurlyToken, BillingInfo.class);
     }
 
@@ -633,17 +636,17 @@ public class RecurlyClient {
      * @param recurlyToken token given by recurly.js
      * @return invoice object on success, null otherwise
      */
-    public Invoice fetchInvoice(final String recurlyToken) {
+    public Invoice fetchInvoice(final String recurlyToken) throws IOException, RequestException {
         return fetch(recurlyToken, Invoice.class);
     }
 
-    private <T> T fetch(final String recurlyToken, final Class<T> clazz) {
+    private <T> T fetch(final String recurlyToken, final Class<T> clazz) throws IOException, RequestException {
         return doGET(FETCH_RESOURCE + "/" + recurlyToken, clazz);
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    private <T> T doGET(final String resource, final Class<T> clazz) {
+    private <T> T doGET(final String resource, final Class<T> clazz) throws IOException, RequestException {
         final StringBuffer url = new StringBuffer(baseUrl);
         url.append(resource);
         if (resource != null && !resource.contains("?")) {
@@ -654,107 +657,85 @@ public class RecurlyClient {
         }
         url.append(getPageSizeGetParam());
 
-        if (debug()) {
-            log.info("Msg to Recurly API [GET] :: URL : {}", url);
-        }
-        return callRecurlySafe(client.prepareGet(url.toString()), clazz);
+        log.debug("Msg to Recurly API [GET] :: URL : {}", url);
+        return callRecurly(url.toString(), clazz);
     }
 
-    private <T> T doGET(final String resource, final String parameters, final Class<T> clazz) {
+    private <T> T doGET(final String resource, final String parameters, final Class<T> clazz) throws IOException, RequestException {
+
         final StringBuffer url = new StringBuffer(baseUrl);
         url.append(resource);
         url.append("?");
         url.append(parameters);
 
-        if (debug()) {
-            log.info("Msg to Recurly API [GET] :: URL : {}", url);
-        }
-        return callRecurlySafe(client.prepareGet(url.toString()), clazz);
+        log.debug("Msg to Recurly API [GET] :: URL : {}", url);
+
+        return callRecurly(url.toString(), clazz);
     }
 
 
-    private <T> T doPOST(final String resource, final RecurlyObject payload, final Class<T> clazz) {
-        final String xmlPayload;
-        try {
-            xmlPayload = xmlMapper.writeValueAsString(payload);
-            if (debug()) {
-                log.info("Msg to Recurly API [POST]:: URL : {}", baseUrl + resource);
-                log.info("Payload for [POST]:: {}", xmlPayload);
-            }
-        } catch (IOException e) {
-            log.warn("Unable to serialize {} object as XML: {}", clazz.getName(), payload.toString());
+    private <T> T doPOST(final String resource, final RecurlyObject payload, final Class<T> clazz)
+            throws InterruptedException, ExecutionException, IOException, RequestException {
+
+        final String xmlPayload = xmlMapper.writeValueAsString(payload);
+        log.debug("Msg to Recurly API [POST]:: URL : {}", baseUrl + resource);
+        log.debug("Payload for [POST]:: {}", xmlPayload);
+
+        return callRecurly(baseUrl + resource, xmlPayload, clazz);
+    }
+
+    private <T> T doPUT(final String resource, final RecurlyObject payload, final Class<T> clazz)
+            throws IOException, RequestException {
+        final String xmlPayload = xmlMapper.writeValueAsString(payload);
+        log.debug("Msg to Recurly API [PUT]:: URL : {}", baseUrl + resource);
+        log.debug("Payload for [PUT]:: {}", xmlPayload);
+
+        return callRecurly(baseUrl + resource, xmlPayload, clazz);
+    }
+
+    private void doDELETE(final String resource) throws IOException, RequestException {
+        callRecurly(baseUrl + resource, null);
+    }
+
+    private <T> T callRecurly(final String baseUrl, @Nullable final Class<T> clazz)
+            throws IOException, RequestException {
+        return callRecurly(baseUrl, null, clazz);
+    }
+
+    private <T> T callRecurly(final String baseUrl, final String xmlPayload, @Nullable final Class<T> clazz)
+            throws IOException, RequestException {
+        if (clazz == null) {
             return null;
         }
 
-        return callRecurlySafe(client.preparePost(baseUrl + resource).setBody(xmlPayload), clazz);
-    }
+        T obj = null;
+        InputStream stream = null;
+        DefaultHttpClient  httpClient = new DefaultHttpClient();
+        try
+        {
+            HttpPost httpPost = new HttpPost(baseUrl);
+            httpPost.addHeader("Authorization", "Basic " + key);
+            httpPost.addHeader("Accept", "application/xml");
+            httpPost.addHeader("Content-Type", "application/xml; charset=utf-8");
+            if (xmlPayload != null && !xmlPayload.isEmpty())
+                httpPost.setEntity(new StringEntity(xmlPayload, "text/xml", "ISO-8859-1"));
 
-    private <T> T doPUT(final String resource, final RecurlyObject payload, final Class<T> clazz) {
-        final String xmlPayload;
-        try {
-            xmlPayload = xmlMapper.writeValueAsString(payload);
-            if (debug()) {
-                log.info("Msg to Recurly API [PUT]:: URL : {}", baseUrl + resource);
-                log.info("Payload for [PUT]:: {}", xmlPayload);
-            }
-        } catch (IOException e) {
-            log.warn("Unable to serialize {} object as XML: {}", clazz.getName(), payload.toString());
-            return null;
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            if (response.getStatusLine().getStatusCode() >= 300)
+                throw new RequestException(baseUrl, EntityUtils.toString(entity));
+
+            stream = entity.getContent();
+            final String payload = convertStreamToString(stream);
+            log.debug("Msg from Recurly API :: {}", payload);
+            obj = xmlMapper.readValue(payload, clazz);
+        } finally {
+            httpClient.getConnectionManager().shutdown();
+            if (stream != null)
+                stream.close();
         }
 
-        return callRecurlySafe(client.preparePut(baseUrl + resource).setBody(xmlPayload), clazz);
-    }
-
-    private void doDELETE(final String resource) {
-        callRecurlySafe(client.prepareDelete(baseUrl + resource), null);
-    }
-
-    private <T> T callRecurlySafe(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz) {
-        try {
-            return callRecurly(builder, clazz);
-        } catch (IOException e) {
-            log.warn("Error while calling Recurly", e);
-            return null;
-        } catch (ExecutionException e) {
-            log.error("Execution error", e);
-            return null;
-        } catch (InterruptedException e) {
-            log.error("Interrupted while calling Recurly", e);
-            return null;
-        }
-    }
-
-    private <T> T callRecurly(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz)
-            throws IOException, ExecutionException, InterruptedException {
-        return builder.addHeader("Authorization", "Basic " + key)
-                      .addHeader("Accept", "application/xml")
-                      .addHeader("Content-Type", "application/xml; charset=utf-8")
-                      .execute(new AsyncCompletionHandler<T>() {
-                          @Override
-                          public T onCompleted(final Response response) throws Exception {
-                              if (response.getStatusCode() >= 300) {
-                                  log.warn("Recurly error whilst calling: {}", response.getUri());
-                                  log.warn("Recurly error: {}", response.getResponseBody());
-                                  return null;
-                              }
-
-                              if (clazz == null) {
-                                  return null;
-                              }
-
-                              final InputStream in = response.getResponseBodyAsStream();
-                              try {
-                                  final String payload = convertStreamToString(in);
-                                  if (debug()) {
-                                      log.info("Msg from Recurly API :: {}", payload);
-                                  }
-                                  final T obj = xmlMapper.readValue(payload, clazz);
-                                  return obj;
-                              } finally {
-                                  closeStream(in);
-                              }
-                          }
-                      }).get();
+        return obj;
     }
 
     private String convertStreamToString(final java.io.InputStream is) {
@@ -762,16 +743,6 @@ public class RecurlyClient {
             return new java.util.Scanner(is).useDelimiter("\\A").next();
         } catch (java.util.NoSuchElementException e) {
             return "";
-        }
-    }
-
-    private void closeStream(final InputStream in) {
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException e) {
-                log.warn("Failed to close http-client - provided InputStream: {}", e.getLocalizedMessage());
-            }
         }
     }
 
