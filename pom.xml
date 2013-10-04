@@ -24,7 +24,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>recurly-java-library</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.13-SNAPSHOT</version>
+    <version>0.1.12-SNAPSHOT</version>
     <name>Recurly Java library</name>
     <description>Java library for Recurly</description>
     <url>http://github.com/Smartling/recurly-java-library</url>
@@ -127,18 +127,9 @@
             <version>6.3.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.1.2</version>
-        </dependency>
-    </dependencies>
 
+
+</dependencies>
     <build>
         <plugins>
             <plugin>
