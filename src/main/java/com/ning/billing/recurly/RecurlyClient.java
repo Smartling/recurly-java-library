@@ -16,6 +16,8 @@
 
 package com.ning.billing.recurly;
 
+import com.ning.billing.recurly.model.exceptions.RecurlyException;
+import com.ning.billing.recurly.model.exceptions.RequestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -233,7 +235,8 @@ public class RecurlyClient {
      */
     public Subscription createSubscription(final Subscription subscription) {
         return doPOST(Subscription.SUBSCRIPTION_RESOURCE,
-                      subscription, Subscription.class);
+                subscription, Subscription.class
+        );
     }
 
     /**
@@ -246,8 +249,9 @@ public class RecurlyClient {
      */
     public Subscription getSubscription(final String uuid) {
         return doGET(Subscriptions.SUBSCRIPTIONS_RESOURCE
-                     + "/" + uuid,
-                     Subscription.class);
+                + "/" + uuid,
+                Subscription.class
+        );
     }
 
     /**
@@ -273,7 +277,8 @@ public class RecurlyClient {
      */
     public Subscription reactivateSubscription(final Subscription subscription) {
         return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscription.getUuid() + "/reactivate",
-                     subscription, Subscription.class);
+                subscription, Subscription.class
+        );
     }
 
     /**
@@ -286,9 +291,10 @@ public class RecurlyClient {
      */
     public Subscription updateSubscription(final String uuid, final SubscriptionUpdate subscriptionUpdate) {
         return doPUT(Subscriptions.SUBSCRIPTIONS_RESOURCE
-                     + "/" + uuid,
-                     subscriptionUpdate,
-                     Subscription.class);
+                + "/" + uuid,
+                subscriptionUpdate,
+                Subscription.class
+        );
     }
 
     /**
@@ -317,11 +323,12 @@ public class RecurlyClient {
      */
     public Subscriptions getAccountSubscriptions(final String accountCode, final String status) {
         return doGET(Account.ACCOUNT_RESOURCE
-                     + "/" + accountCode
-                     + Subscriptions.SUBSCRIPTIONS_RESOURCE
-                     + "?state="
-                     + status,
-                     Subscriptions.class);
+                + "/" + accountCode
+                + Subscriptions.SUBSCRIPTIONS_RESOURCE
+                + "?state="
+                + status,
+                Subscriptions.class
+        );
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -388,7 +395,8 @@ public class RecurlyClient {
      */
     public Transactions getAccountTransactions(final String accountCode) {
         return doGET(Accounts.ACCOUNTS_RESOURCE + "/" + accountCode + Transactions.TRANSACTIONS_RESOURCE,
-                     Transactions.class);
+                Transactions.class
+        );
     }
 
     /**
@@ -458,7 +466,8 @@ public class RecurlyClient {
      */
     public Invoice getInvoice(final Integer invoiceId) {
         return doGET(Invoices.INVOICES_RESOURCE + "/" + invoiceId.toString(),
-                Invoice.class);
+                Invoice.class
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -519,10 +528,11 @@ public class RecurlyClient {
      */
     public AddOn createPlanAddOn(final String planCode, final AddOn addOn) {
         return doPOST(Plan.PLANS_RESOURCE +
-                      "/" +
-                      planCode +
-                      AddOn.ADDONS_RESOURCE,
-                      addOn, AddOn.class);
+                "/" +
+                planCode +
+                AddOn.ADDONS_RESOURCE,
+                addOn, AddOn.class
+        );
     }
 
     /**
@@ -724,37 +734,81 @@ public class RecurlyClient {
         }
     }
 
+    private class HttpResponseContainer
+    {
+        private Object object;
+        private RecurlyException exception;
+
+        public Object getObject()
+        {
+            return object;
+        }
+
+        public void setObject(final Object object)
+        {
+            this.object = object;
+        }
+
+        public RecurlyException getException()
+        {
+            return exception;
+        }
+
+        public void setException(final RecurlyException exception)
+        {
+            this.exception = exception;
+        }
+    }
+
     private <T> T callRecurly(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz)
             throws IOException, ExecutionException, InterruptedException {
-        return builder.addHeader("Authorization", "Basic " + key)
-                      .addHeader("Accept", "application/xml")
-                      .addHeader("Content-Type", "application/xml; charset=utf-8")
-                      .execute(new AsyncCompletionHandler<T>() {
-                          @Override
-                          public T onCompleted(final Response response) throws Exception {
-                              if (response.getStatusCode() >= 300) {
-                                  log.warn("Recurly error whilst calling: {}", response.getUri());
-                                  log.warn("Recurly error: {}", response.getResponseBody());
-                                  return null;
-                              }
 
-                              if (clazz == null) {
-                                  return null;
-                              }
+        HttpResponseContainer httpResponseContainer = builder.addHeader("Authorization", "Basic " + key)
+                                                             .addHeader("Accept", "application/xml")
+                                                             .addHeader("Content-Type", "application/xml; charset=utf-8")
+                                                             .execute(new AsyncCompletionHandler<HttpResponseContainer>() {
+                                                                 @Override
+                                                                 public HttpResponseContainer onCompleted(final Response response) throws Exception {
+                                                                      final HttpResponseContainer httpResponseContainer = new HttpResponseContainer();
+                                                                      try
+                                                                      {
+                                                                          if (response.getStatusCode() >= 300) {
+                                                                              log.warn("Recurly error whilst calling: {}", response.getUri());
+                                                                              log.warn("Recurly error: {}", response.getResponseBody());
+                                                                              httpResponseContainer.setException(new RequestException(response.getUri().toString(), response.getResponseBody()));
+                                                                              return httpResponseContainer;
+                                                                          }
 
-                              final InputStream in = response.getResponseBodyAsStream();
-                              try {
-                                  final String payload = convertStreamToString(in);
-                                  if (debug()) {
-                                      log.info("Msg from Recurly API :: {}", payload);
-                                  }
-                                  final T obj = xmlMapper.readValue(payload, clazz);
-                                  return obj;
-                              } finally {
-                                  closeStream(in);
-                              }
-                          }
-                      }).get();
+                                                                          if (clazz == null) {
+                                                                              return null;
+                                                                          }
+
+                                                                          final InputStream in = response.getResponseBodyAsStream();
+                                                                          try {
+                                                                              final String payload = convertStreamToString(in);
+                                                                              if (debug()) {
+                                                                                  log.info("Msg from Recurly API :: {}", payload);
+                                                                              }
+                                                                              final T obj = xmlMapper.readValue(payload, clazz);
+                                                                              httpResponseContainer.setObject(obj);
+
+                                                                              return httpResponseContainer;
+                                                                          } finally {
+                                                                              closeStream(in);
+                                                                          }
+                                                                      }
+                                                                      catch (Exception exception)
+                                                                      {
+                                                                          httpResponseContainer.setException(new RecurlyException(exception));
+                                                                      }
+                                                                     return httpResponseContainer;
+                                                                  }
+                                                              }).get();
+
+        if (null != httpResponseContainer.getException())
+            throw httpResponseContainer.getException();
+
+        return null == httpResponseContainer ? null : (T)httpResponseContainer.getObject();
     }
 
     private String convertStreamToString(final java.io.InputStream is) {
