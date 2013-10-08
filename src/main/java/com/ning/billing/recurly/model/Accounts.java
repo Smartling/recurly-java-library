@@ -19,7 +19,7 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-@XmlRootElement(name = "plans")
+@XmlRootElement(name = "accounts")
 public class Accounts extends RecurlyObjects<Account> {
 
     @XmlTransient

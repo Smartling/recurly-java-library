@@ -30,6 +30,10 @@ public class RequestException extends RecurlyException
         this.body = body;
     }
 
+    public RequestException(Throwable cause) {
+        super(cause);
+    }
+
     @Override
     public String getMessage() {
         return String.format(URL_MESSAGE, url) + String.format(BODY_MESSAGE, body);

@@ -766,47 +766,66 @@ public class RecurlyClient {
         HttpResponseContainer httpResponseContainer = builder.addHeader("Authorization", "Basic " + key)
                                                              .addHeader("Accept", "application/xml")
                                                              .addHeader("Content-Type", "application/xml; charset=utf-8")
-                                                             .execute(new AsyncCompletionHandler<HttpResponseContainer>() {
+                                                             .execute(new AsyncCompletionHandler<HttpResponseContainer>()
+                                                             {
                                                                  @Override
-                                                                 public HttpResponseContainer onCompleted(final Response response) throws Exception {
-                                                                      final HttpResponseContainer httpResponseContainer = new HttpResponseContainer();
-                                                                      try
-                                                                      {
-                                                                          if (response.getStatusCode() >= 300) {
-                                                                              log.warn("Recurly error whilst calling: {}", response.getUri());
-                                                                              log.warn("Recurly error: {}", response.getResponseBody());
-                                                                              httpResponseContainer.setException(new RequestException(response.getUri().toString(), response.getResponseBody()));
-                                                                              return httpResponseContainer;
-                                                                          }
+                                                                 public HttpResponseContainer onCompleted(final Response response) throws Exception
+                                                                 {
+                                                                     final HttpResponseContainer httpResponseContainer = new HttpResponseContainer();
+                                                                     try
+                                                                     {
+                                                                         if (response.getStatusCode() >= 300)
+                                                                         {
+                                                                             log.warn("Recurly error whilst calling: {}", response.getUri());
+                                                                             log.warn("Recurly error: {}", response.getResponseBody());
+                                                                             httpResponseContainer
+                                                                                     .setException(new RequestException(response.getUri().toString(), response.getResponseBody()));
+                                                                             return httpResponseContainer;
+                                                                         }
 
-                                                                          if (clazz == null) {
-                                                                              return null;
-                                                                          }
+                                                                         if (clazz == null)
+                                                                         {
+                                                                             return null;
+                                                                         }
 
-                                                                          final InputStream in = response.getResponseBodyAsStream();
-                                                                          try {
-                                                                              final String payload = convertStreamToString(in);
-                                                                              if (debug()) {
-                                                                                  log.info("Msg from Recurly API :: {}", payload);
-                                                                              }
-                                                                              final T obj = xmlMapper.readValue(payload, clazz);
-                                                                              httpResponseContainer.setObject(obj);
+                                                                         final InputStream in = response.getResponseBodyAsStream();
+                                                                         try
+                                                                         {
+                                                                             final String payload = convertStreamToString(in);
+                                                                             if (debug())
+                                                                             {
+                                                                                 log.info("Msg from Recurly API :: {}", payload);
+                                                                             }
+                                                                             T obj = null;
+                                                                             try
+                                                                             {
+                                                                                 obj = xmlMapper.readValue(payload, clazz);
+                                                                             }
+                                                                             catch (IllegalStateException exception) //this is durty hack - the mapper can't deal with empty arrays (like <items></items> - without nodes)
+                                                                             {
+                                                                                 obj = clazz.newInstance();
+                                                                             }
 
-                                                                              return httpResponseContainer;
-                                                                          } finally {
-                                                                              closeStream(in);
-                                                                          }
-                                                                      }
-                                                                      catch (Exception exception)
-                                                                      {
-                                                                          httpResponseContainer.setException(new RecurlyException(exception));
-                                                                      }
+                                                                             httpResponseContainer.setObject(obj);
+
+                                                                             return httpResponseContainer;
+                                                                         }
+                                                                         finally
+                                                                         {
+                                                                             closeStream(in);
+                                                                         }
+                                                                     }
+                                                                     catch (Exception exception)
+                                                                     {
+                                                                         httpResponseContainer.setException(new RecurlyException(exception));
+                                                                     }
                                                                      return httpResponseContainer;
-                                                                  }
-                                                              }).get();
+                                                                 }
+                                                             }
+                                                             ).get();
 
         if (null != httpResponseContainer.getException())
-            throw httpResponseContainer.getException();
+            throw new RequestException(httpResponseContainer.getException());
 
         return null == httpResponseContainer ? null : (T)httpResponseContainer.getObject();
     }
