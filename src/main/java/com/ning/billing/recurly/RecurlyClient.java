@@ -16,6 +16,8 @@
 
 package com.ning.billing.recurly;
 
+import com.ning.billing.recurly.model.errors.Error404;
+import com.ning.billing.recurly.model.errors.ErrorMessage404;
 import com.ning.billing.recurly.model.exceptions.RecurlyException;
 import com.ning.billing.recurly.model.exceptions.RequestException;
 import java.io.IOException;
@@ -67,6 +69,8 @@ public class RecurlyClient {
 
     private static final String PAGING_ITEMS_PER_PAGE_PARAMETER_NAME = "per_page";
     private static final String PARAMETER_DELIMITER = "&";
+
+    private static final String ERROR_MESSAGE_TEMPLATE = "error code %d (%s)";
 
     /**
      * Checks a system property to see if debugging output is
@@ -778,8 +782,34 @@ public class RecurlyClient {
                                                                          {
                                                                              log.warn("Recurly error whilst calling: {}", response.getUri());
                                                                              log.warn("Recurly error: {}", response.getResponseBody());
-                                                                             httpResponseContainer
-                                                                                     .setException(new RequestException(response.getUri().toString(), response.getResponseBody()));
+                                                                             String errorMessage = null;
+                                                                             switch (response.getStatusCode())
+                                                                             {
+                                                                                 case 404:
+                                                                                     try
+                                                                                     {
+                                                                                         ErrorMessage404 errorObject =
+                                                                                                 xmlMapper.readValue(response.getResponseBody(), ErrorMessage404.class);
+                                                                                         if (null != errorObject.getDescription())
+                                                                                            errorMessage = errorObject.getDescription();
+                                                                                         else
+                                                                                         {
+                                                                                             Error404 errorObjectAnother =
+                                                                                                     xmlMapper.readValue(response.getResponseBody(), Error404.class);
+                                                                                             errorMessage = errorObjectAnother.getError();
+                                                                                         }
+                                                                                     }
+                                                                                     catch (Exception exceptionMapping)
+                                                                                     {
+                                                                                         errorMessage = response.getResponseBody();
+                                                                                     }
+                                                                                     break;
+
+                                                                                 default:
+                                                                                     errorMessage = response.getResponseBody();
+                                                                             }
+
+                                                                             httpResponseContainer.setException(new RequestException(response.getUri().toString(), String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)));
                                                                              return httpResponseContainer;
                                                                          }
 
