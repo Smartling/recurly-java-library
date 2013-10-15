@@ -160,8 +160,6 @@ public class RecurlyClient {
         this.xmlMapper = RecurlyObject.newXmlMapper();
 
         instanceIdentifier = getLog4jMDCIdentifier();
-
-        org.apache.log4j.MDC.put(LOG_MDC, instanceIdentifier);
     }
 
     private String getLog4jMDCIdentifier()
@@ -788,114 +786,124 @@ public class RecurlyClient {
     private <T> T callRecurly(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz)
             throws IOException, ExecutionException, InterruptedException {
 
-        logHttpInfoMessage(anotherLog, "callRecurly() starting ...");
-        HttpResponseContainer httpResponseContainer = builder.addHeader("Authorization", "Basic " + key)
-                                                             .addHeader("Accept", "application/xml")
-                                                             .addHeader("Content-Type", "application/xml; charset=utf-8")
-                                                             .execute(new AsyncCompletionHandler<HttpResponseContainer>()
-                                                             {
-                                                                 @Override
-                                                                 public HttpResponseContainer onCompleted(final Response response) throws Exception
+
+        org.apache.log4j.MDC.put(LOG_MDC, instanceIdentifier);
+        try
+        {
+
+            logHttpInfoMessage(anotherLog, "callRecurly() starting ...");
+            HttpResponseContainer httpResponseContainer = builder.addHeader("Authorization", "Basic " + key)
+                                                                 .addHeader("Accept", "application/xml")
+                                                                 .addHeader("Content-Type", "application/xml; charset=utf-8")
+                                                                 .execute(new AsyncCompletionHandler<HttpResponseContainer>()
                                                                  {
-                                                                     final HttpResponseContainer httpResponseContainer = new HttpResponseContainer();
-                                                                     try
+                                                                     @Override
+                                                                     public HttpResponseContainer onCompleted(final Response response) throws Exception
                                                                      {
-                                                                         if (response.getStatusCode() >= 300)
-                                                                         {
-                                                                             log.warn("Recurly error whilst calling: {}", response.getUri());
-                                                                             log.warn("Recurly error: {}", response.getResponseBody());
-
-                                                                             logHttpErrorMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
-                                                                                     response.getStatusCode(), response.getUri(), response.getResponseBody()
-                                                                             ));
-
-                                                                             String errorMessage = null;
-                                                                             switch (response.getStatusCode())
-                                                                             {
-                                                                                 case 404:
-                                                                                     try
-                                                                                     {
-                                                                                         ErrorMessage404 errorObject =
-                                                                                                 xmlMapper.readValue(response.getResponseBody(), ErrorMessage404.class);
-                                                                                         if (null != errorObject.getDescription())
-                                                                                            errorMessage = errorObject.getDescription();
-                                                                                         else
-                                                                                         {
-                                                                                             Error404 errorObjectAnother =
-                                                                                                     xmlMapper.readValue(response.getResponseBody(), Error404.class);
-                                                                                             errorMessage = errorObjectAnother.getError();
-                                                                                         }
-                                                                                     }
-                                                                                     catch (Exception exceptionMapping)
-                                                                                     {
-                                                                                         errorMessage = response.getResponseBody();
-                                                                                     }
-                                                                                     break;
-
-                                                                                 default:
-                                                                                     errorMessage = response.getResponseBody();
-                                                                             }
-
-                                                                             httpResponseContainer.setException(new RequestException(response.getUri().toString(), String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)));
-                                                                             return httpResponseContainer;
-                                                                         }
-                                                                         else
-                                                                         {
-                                                                             logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
-                                                                                     response.getStatusCode(), response.getUri(), response.getResponseBody()
-                                                                             ));
-                                                                         }
-
-                                                                         if (clazz == null)
-                                                                         {
-                                                                             return null;
-                                                                         }
-
-                                                                         final InputStream in = response.getResponseBodyAsStream();
+                                                                         final HttpResponseContainer httpResponseContainer = new HttpResponseContainer();
                                                                          try
                                                                          {
-                                                                             final String payload = convertStreamToString(in);
-                                                                             if (debug())
+                                                                             if (response.getStatusCode() >= 300)
                                                                              {
-                                                                                 log.info("Msg from Recurly API :: {}", payload);
-                                                                                 logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_FROM_RECURLY_API_TEMPLATE,
-                                                                                         payload
+                                                                                 log.warn("Recurly error whilst calling: {}", response.getUri());
+                                                                                 log.warn("Recurly error: {}", response.getResponseBody());
+
+                                                                                 logHttpErrorMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
+                                                                                         response.getStatusCode(), response.getUri(), response.getResponseBody()
+                                                                                 ));
+
+                                                                                 String errorMessage = null;
+                                                                                 switch (response.getStatusCode())
+                                                                                 {
+                                                                                     case 404:
+                                                                                         try
+                                                                                         {
+                                                                                             ErrorMessage404 errorObject =
+                                                                                                     xmlMapper.readValue(response.getResponseBody(), ErrorMessage404.class);
+                                                                                             if (null != errorObject.getDescription())
+                                                                                                errorMessage = errorObject.getDescription();
+                                                                                             else
+                                                                                             {
+                                                                                                 Error404 errorObjectAnother =
+                                                                                                         xmlMapper.readValue(response.getResponseBody(), Error404.class);
+                                                                                                 errorMessage = errorObjectAnother.getError();
+                                                                                             }
+                                                                                         }
+                                                                                         catch (Exception exceptionMapping)
+                                                                                         {
+                                                                                             errorMessage = response.getResponseBody();
+                                                                                         }
+                                                                                         break;
+
+                                                                                     default:
+                                                                                         errorMessage = response.getResponseBody();
+                                                                                 }
+
+                                                                                 httpResponseContainer.setException(new RequestException(response.getUri().toString(), String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)));
+                                                                                 return httpResponseContainer;
+                                                                             }
+                                                                             else
+                                                                             {
+                                                                                 logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
+                                                                                         response.getStatusCode(), response.getUri(), response.getResponseBody()
                                                                                  ));
                                                                              }
-                                                                             T obj = null;
+
+                                                                             if (clazz == null)
+                                                                             {
+                                                                                 return null;
+                                                                             }
+
+                                                                             final InputStream in = response.getResponseBodyAsStream();
                                                                              try
                                                                              {
-                                                                                 obj = xmlMapper.readValue(payload, clazz);
+                                                                                 final String payload = convertStreamToString(in);
+                                                                                 if (debug())
+                                                                                 {
+                                                                                     log.info("Msg from Recurly API :: {}", payload);
+                                                                                     logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_FROM_RECURLY_API_TEMPLATE,
+                                                                                             payload
+                                                                                     ));
+                                                                                 }
+                                                                                 T obj = null;
+                                                                                 try
+                                                                                 {
+                                                                                     obj = xmlMapper.readValue(payload, clazz);
+                                                                                 }
+                                                                                 catch (IllegalStateException exception) //this is durty hack - the mapper can't deal with empty arrays (like <items></items> - without nodes)
+                                                                                 {
+                                                                                     obj = clazz.newInstance();
+                                                                                 }
+
+                                                                                 httpResponseContainer.setObject(obj);
+
+                                                                                 return httpResponseContainer;
                                                                              }
-                                                                             catch (IllegalStateException exception) //this is durty hack - the mapper can't deal with empty arrays (like <items></items> - without nodes)
+                                                                             finally
                                                                              {
-                                                                                 obj = clazz.newInstance();
+                                                                                 closeStream(in);
                                                                              }
-
-                                                                             httpResponseContainer.setObject(obj);
-
-                                                                             return httpResponseContainer;
                                                                          }
-                                                                         finally
+                                                                         catch (Exception exception)
                                                                          {
-                                                                             closeStream(in);
+                                                                             httpResponseContainer.setException(new RecurlyException(exception));
                                                                          }
+                                                                         return httpResponseContainer;
                                                                      }
-                                                                     catch (Exception exception)
-                                                                     {
-                                                                         httpResponseContainer.setException(new RecurlyException(exception));
-                                                                     }
-                                                                     return httpResponseContainer;
                                                                  }
-                                                             }
-                                                             ).get();
+                                                                 ).get();
 
-        if (null != httpResponseContainer.getException())
-            throw new RequestException(httpResponseContainer.getException());
+            if (null != httpResponseContainer.getException())
+                throw new RequestException(httpResponseContainer.getException());
 
-        logHttpInfoMessage(anotherLog, "callRecurly() finished");
+            logHttpInfoMessage(anotherLog, "callRecurly() finished");
 
-        return null == httpResponseContainer ? null : (T)httpResponseContainer.getObject();
+            return null == httpResponseContainer ? null : (T)httpResponseContainer.getObject();
+        }
+        finally
+        {
+            org.apache.log4j.MDC.remove(LOG_MDC);
+        }
     }
 
     private String convertStreamToString(final java.io.InputStream is) {
