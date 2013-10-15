@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -54,6 +55,8 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.slf4j.MDC;
+import org.slf4j.impl.StaticMDCBinder;
 
 public class RecurlyClient {
 
@@ -71,6 +74,14 @@ public class RecurlyClient {
     private static final String PARAMETER_DELIMITER = "&";
 
     private static final String ERROR_MESSAGE_TEMPLATE = "error code %d (%s)";
+
+    private static final Logger anotherLog  = LoggerFactory.getLogger("recurlyClientLogger");
+    private static final String LOG_HTTP_MESSAGE_PREFIX = "RecurlyClient : %s";
+
+    private static final String LOG_HTTP_MESSAGE_TEMPLATE = "status code: %d request: %s response: %s";
+    private static final String LOG_HTTP_MESSAGE_FROM_RECURLY_API_TEMPLATE = "message from API: %s";
+
+    private static final String LOG_MDC = "RecurlyClient.recurlyClientIdentifier";
 
     /**
      * Checks a system property to see if debugging output is
@@ -137,6 +148,8 @@ public class RecurlyClient {
     private final String baseUrl;
     private AsyncHttpClient client;
 
+    private String instanceIdentifier;
+
     public RecurlyClient(final String apiKey) {
         this(apiKey, "api.recurly.com", 443, "v2");
     }
@@ -145,8 +158,16 @@ public class RecurlyClient {
         this.key = DatatypeConverter.printBase64Binary(apiKey.getBytes());
         this.baseUrl = String.format("https://%s:%d/%s", host, port, version);
         this.xmlMapper = RecurlyObject.newXmlMapper();
+
+        instanceIdentifier = getLog4jMDCIdentifier();
+
+        org.apache.log4j.MDC.put(LOG_MDC, instanceIdentifier);
     }
 
+    private String getLog4jMDCIdentifier()
+    {
+        return String.format("recurlyClientId=%s", UUID.randomUUID().toString());
+    }
     /**
      * Open the underlying http client
      */
@@ -767,6 +788,7 @@ public class RecurlyClient {
     private <T> T callRecurly(final AsyncHttpClient.BoundRequestBuilder builder, @Nullable final Class<T> clazz)
             throws IOException, ExecutionException, InterruptedException {
 
+        logHttpInfoMessage(anotherLog, "callRecurly() starting ...");
         HttpResponseContainer httpResponseContainer = builder.addHeader("Authorization", "Basic " + key)
                                                              .addHeader("Accept", "application/xml")
                                                              .addHeader("Content-Type", "application/xml; charset=utf-8")
@@ -782,6 +804,11 @@ public class RecurlyClient {
                                                                          {
                                                                              log.warn("Recurly error whilst calling: {}", response.getUri());
                                                                              log.warn("Recurly error: {}", response.getResponseBody());
+
+                                                                             logHttpErrorMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
+                                                                                     response.getStatusCode(), response.getUri(), response.getResponseBody()
+                                                                             ));
+
                                                                              String errorMessage = null;
                                                                              switch (response.getStatusCode())
                                                                              {
@@ -812,6 +839,12 @@ public class RecurlyClient {
                                                                              httpResponseContainer.setException(new RequestException(response.getUri().toString(), String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)));
                                                                              return httpResponseContainer;
                                                                          }
+                                                                         else
+                                                                         {
+                                                                             logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
+                                                                                     response.getStatusCode(), response.getUri(), response.getResponseBody()
+                                                                             ));
+                                                                         }
 
                                                                          if (clazz == null)
                                                                          {
@@ -825,6 +858,9 @@ public class RecurlyClient {
                                                                              if (debug())
                                                                              {
                                                                                  log.info("Msg from Recurly API :: {}", payload);
+                                                                                 logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_FROM_RECURLY_API_TEMPLATE,
+                                                                                         payload
+                                                                                 ));
                                                                              }
                                                                              T obj = null;
                                                                              try
@@ -857,6 +893,8 @@ public class RecurlyClient {
         if (null != httpResponseContainer.getException())
             throw new RequestException(httpResponseContainer.getException());
 
+        logHttpInfoMessage(anotherLog, "callRecurly() finished");
+
         return null == httpResponseContainer ? null : (T)httpResponseContainer.getObject();
     }
 
@@ -884,5 +922,30 @@ public class RecurlyClient {
         final AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
         builder.setMaximumConnectionsPerHost(-1);
         return new AsyncHttpClient(builder.build());
+    }
+
+    private String formatLogHttpInfoMessage(String message)
+    {
+        return String.format(LOG_HTTP_MESSAGE_PREFIX, message);
+    }
+
+    private void logHttpInfoMessage(Logger log, String message)
+    {
+        log.info(formatLogHttpInfoMessage(message));
+    }
+
+    private void logHttpWarningMessage(Logger log, String message)
+    {
+        log.warn(formatLogHttpInfoMessage(message));
+    }
+
+    private void logHttpDebugMessage(Logger log, String message)
+    {
+        log.debug(formatLogHttpInfoMessage(message));
+    }
+
+    private void logHttpErrorMessage(Logger log, String message)
+    {
+        log.error(formatLogHttpInfoMessage(message));
     }
 }
