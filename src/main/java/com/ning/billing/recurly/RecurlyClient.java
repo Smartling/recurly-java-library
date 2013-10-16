@@ -810,7 +810,8 @@ public class RecurlyClient {
 
                                                                                  logHttpErrorMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
                                                                                          response.getStatusCode(), response.getUri(), response.getResponseBody()
-                                                                                 ));
+                                                                                 )
+                                                                                 );
 
                                                                                  String errorMessage = null;
                                                                                  switch (response.getStatusCode())
@@ -821,7 +822,7 @@ public class RecurlyClient {
                                                                                              ErrorMessage404 errorObject =
                                                                                                      xmlMapper.readValue(response.getResponseBody(), ErrorMessage404.class);
                                                                                              if (null != errorObject.getDescription())
-                                                                                                errorMessage = errorObject.getDescription();
+                                                                                                 errorMessage = errorObject.getDescription();
                                                                                              else
                                                                                              {
                                                                                                  Error404 errorObjectAnother =
@@ -839,14 +840,18 @@ public class RecurlyClient {
                                                                                          errorMessage = response.getResponseBody();
                                                                                  }
 
-                                                                                 httpResponseContainer.setException(new RequestException(response.getUri().toString(), String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)));
+                                                                                 httpResponseContainer.setException(new RequestException(response.getUri().toString(),
+                                                                                         String.format(ERROR_MESSAGE_TEMPLATE, response.getStatusCode(), errorMessage)
+                                                                                 )
+                                                                                 );
                                                                                  return httpResponseContainer;
                                                                              }
                                                                              else
                                                                              {
                                                                                  logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_TEMPLATE,
                                                                                          response.getStatusCode(), response.getUri(), response.getResponseBody()
-                                                                                 ));
+                                                                                 )
+                                                                                 );
                                                                              }
 
                                                                              if (clazz == null)
@@ -863,17 +868,11 @@ public class RecurlyClient {
                                                                                      log.info("Msg from Recurly API :: {}", payload);
                                                                                      logHttpInfoMessage(anotherLog, String.format(LOG_HTTP_MESSAGE_FROM_RECURLY_API_TEMPLATE,
                                                                                              payload
-                                                                                     ));
+                                                                                     )
+                                                                                     );
                                                                                  }
-                                                                                 T obj = null;
-                                                                                 try
-                                                                                 {
-                                                                                     obj = xmlMapper.readValue(payload, clazz);
-                                                                                 }
-                                                                                 catch (IllegalStateException exception) //this is durty hack - the mapper can't deal with empty arrays (like <items></items> - without nodes)
-                                                                                 {
-                                                                                     obj = clazz.newInstance();
-                                                                                 }
+
+                                                                                 T obj = xmlMapper.readValue(payload, clazz);
 
                                                                                  httpResponseContainer.setObject(obj);
 
@@ -908,7 +907,7 @@ public class RecurlyClient {
 
     private String convertStreamToString(final java.io.InputStream is) {
         try {
-            return new java.util.Scanner(is).useDelimiter("\\A").next();
+            return new java.util.Scanner(is).useDelimiter("\\A").next().replace("\n", "");
         } catch (java.util.NoSuchElementException e) {
             return "";
         }
