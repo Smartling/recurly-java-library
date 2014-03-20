@@ -18,8 +18,10 @@ package com.ning.billing.recurly;
 
 import com.ning.billing.recurly.model.errors.Error404;
 import com.ning.billing.recurly.model.errors.ErrorMessage404;
+import com.ning.billing.recurly.model.exceptions.NotFoundException;
 import com.ning.billing.recurly.model.exceptions.RecurlyException;
 import com.ning.billing.recurly.model.exceptions.RequestException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,9 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.xml.bind.DatatypeConverter;
 
@@ -56,8 +58,8 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
-
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
 import org.slf4j.MDC;
 import org.slf4j.impl.StaticMDCBinder;
 
@@ -75,8 +77,6 @@ public class RecurlyClient {
 
     private static final String PAGING_ITEMS_PER_PAGE_PARAMETER_NAME = "per_page";
     private static final String PARAMETER_DELIMITER = "&";
-
-    private static final String ERROR_MESSAGE_TEMPLATE = "error code %d (%s)";
 
     private static final Logger anotherLog  = LoggerFactory.getLogger("recurlyClientLogger");
     private static final String LOG_HTTP_MESSAGE_PREFIX = "RecurlyClient : %s";
@@ -822,10 +822,9 @@ public class RecurlyClient {
 
                                                                                  logHttpErrorMessage(anotherLog, getLogHttpMessage(statusCode, responseUri, responseBody));
 
-                                                                                 String errorMessage = getErrorMessage(statusCode, responseBody);
+                                                                                 RequestException exception = getRequestException(statusCode, responseBody, responseUri);
 
-                                                                                 httpResponseContainer.setException(new RequestException(responseUri,
-                                                                                         String.format(ERROR_MESSAGE_TEMPLATE, statusCode, errorMessage)));
+                                                                                 httpResponseContainer.setException(exception);
 
                                                                                  return httpResponseContainer;
                                                                              }
@@ -873,7 +872,7 @@ public class RecurlyClient {
                                                                  ).get();
 
             if (null != httpResponseContainer.getException())
-                throw new RequestException(httpResponseContainer.getException());
+                throw httpResponseContainer.getException();
 
             logHttpInfoMessage(anotherLog, "callRecurly() finished");
 
@@ -885,13 +884,14 @@ public class RecurlyClient {
         }
     }
 
-    private String getErrorMessage(int statusCode, String responseBody)
+    private RequestException getRequestException(int statusCode, String responseBody, String url)
     {
         String errorMessage = null;
 
         switch (statusCode)
         {
             case 404:
+            {
                 try
                 {
                     ErrorMessage404 errorObject = xmlMapper.readValue(responseBody, ErrorMessage404.class);
@@ -907,13 +907,11 @@ public class RecurlyClient {
                 {
                     errorMessage = responseBody;
                 }
-                break;
-
+                return new NotFoundException(errorMessage, url);
+            }
             default:
-                errorMessage = responseBody;
+                return new RequestException(responseBody, url, statusCode);
         }
-
-        return errorMessage;
     }
 
     private String convertStreamToString(final java.io.InputStream is) {

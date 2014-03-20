@@ -20,22 +20,23 @@ package com.ning.billing.recurly.model.exceptions;
 public class RequestException extends RecurlyException
 {
     public static final String URL_MESSAGE = "Recurly error while calling: %s\n";
-    public static final String BODY_MESSAGE = "Recurly error: %s";
+    public static final String BODY_MESSAGE = "Recurly error: error code %d (%s)";
 
     private String url;
-    private String body;
+    private String errorMessage;
+    private int statusCode;
 
-    public RequestException(String url, String body) {
+
+    public RequestException(String errorMessage, String url, int statusCode)
+    {
+        super();
         this.url = url;
-        this.body = body;
-    }
-
-    public RequestException(Throwable cause) {
-        super(cause);
+        this.errorMessage = errorMessage;
+        this.statusCode = statusCode;
     }
 
     @Override
     public String getMessage() {
-        return String.format(URL_MESSAGE, url) + String.format(BODY_MESSAGE, body);
+        return String.format(URL_MESSAGE, url) + String.format(BODY_MESSAGE, statusCode, errorMessage);
     }
 }
