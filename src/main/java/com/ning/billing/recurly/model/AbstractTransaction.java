@@ -19,6 +19,8 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.ning.billing.recurly.model.errors.TransactionError;
+
 @XmlRootElement(name = "transaction")
 public class AbstractTransaction extends RecurlyObject {
 
@@ -34,6 +36,9 @@ public class AbstractTransaction extends RecurlyObject {
     @XmlElement(name = "reference")
     protected String reference;
 
+    @XmlElement(name = "source")
+    protected String source;
+
     @XmlElement(name = "test")
     protected Boolean test;
 
@@ -42,6 +47,12 @@ public class AbstractTransaction extends RecurlyObject {
 
     @XmlElement(name = "refundable")
     protected Boolean refundable;
+
+    @XmlElement(name = "payment_method")
+    protected String paymentMethod;
+
+    @XmlElement(name = "transaction_error")
+    protected TransactionError transactionError;
 
     public String getAction() {
         return action;
@@ -99,6 +110,30 @@ public class AbstractTransaction extends RecurlyObject {
         this.refundable = booleanOrNull(refundable);
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(final Object source) {
+        this.source = stringOrNull(source);
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(final Object paymentMethod) {
+        this.paymentMethod = stringOrNull(paymentMethod);
+    }
+
+    public TransactionError getTransactionError() {
+        return transactionError;
+    }
+
+    public void setTransactionError(TransactionError transactionError) {
+        this.transactionError = transactionError;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -132,6 +167,18 @@ public class AbstractTransaction extends RecurlyObject {
             return false;
         }
 
+        if (source != null ? !source.equals(that.source) : that.source != null) {
+            return false;
+        }
+
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
+            return false;
+        }
+
+        if (transactionError != null ? !transactionError.equals(that.transactionError) : that.transactionError != null) {
+            return false;
+        }
+
         return true;
     }
 
@@ -144,6 +191,9 @@ public class AbstractTransaction extends RecurlyObject {
         result = 31 * result + (test != null ? test.hashCode() : 0);
         result = 31 * result + (voidable != null ? voidable.hashCode() : 0);
         result = 31 * result + (refundable != null ? refundable.hashCode() : 0);
+        result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        result = 31 * result + (transactionError != null ? transactionError.hashCode() : 0);
         return result;
     }
 }

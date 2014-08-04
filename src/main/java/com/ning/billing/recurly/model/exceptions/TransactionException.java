@@ -16,19 +16,21 @@
 
 package com.ning.billing.recurly.model.exceptions;
 
-import com.ning.billing.recurly.model.errors.ErrorMessage404;
+import com.ning.billing.recurly.model.Transaction;
+import com.ning.billing.recurly.model.errors.Errors;
+import com.ning.billing.recurly.model.errors.TransactionError;
 
-public class NotFoundException extends CommonRequestException {
-    private static final int STATUS_CODE = 404;
+public class TransactionException extends RequestException {
 
-    private ErrorMessage404 error;
-
-    public NotFoundException(ErrorMessage404 error, String errorMessage, String url) {
-        super(errorMessage, url, STATUS_CODE);
-        this.error = error;
+    public TransactionException(Errors errors, String message, String url, int statusCode) {
+        super(errors, message, url, statusCode);
     }
 
-    public ErrorMessage404 getError() {
-        return error;
+    public Transaction getTransaction() {
+        return null != getErrors() ? getErrors().getTransaction() : null;
+    }
+
+    public TransactionError getTransactionError() {
+        return null != getErrors() ? getErrors().getTransactionError() : null;
     }
 }

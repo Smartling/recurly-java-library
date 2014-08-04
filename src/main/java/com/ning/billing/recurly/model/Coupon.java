@@ -16,6 +16,8 @@
 
 package com.ning.billing.recurly.model;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -84,7 +86,7 @@ public class Coupon extends RecurlyObject {
     private Integer discountPercent;
 
     @XmlElement(name = "discount_in_cents")
-    private Integer discountInCents;
+    private Map<String, Integer> discountInCents;
 
     @XmlElement(name = "state")
     private String state;
@@ -205,12 +207,12 @@ public class Coupon extends RecurlyObject {
         this.singleUse = booleanOrNull(singleUse);
     }
 
-    public Integer getDiscountInCents() {
+    public Map<String, Integer> getDiscountInCents() {
         return discountInCents;
     }
 
     public void setDiscountInCents(final Object discountInCents) {
-        this.discountInCents = integerOrNull(discountInCents);
+        this.discountInCents = (Map<String, Integer>) discountInCents;
     }
 
     public Boolean getAppliesToAllPlans() {

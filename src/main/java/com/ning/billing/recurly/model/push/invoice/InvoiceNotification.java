@@ -14,21 +14,22 @@
  * under the License.
  */
 
-package com.ning.billing.recurly.model.exceptions;
+package com.ning.billing.recurly.model.push.invoice;
 
-import com.ning.billing.recurly.model.errors.ErrorMessage404;
+import javax.xml.bind.annotation.XmlElement;
 
-public class NotFoundException extends CommonRequestException {
-    private static final int STATUS_CODE = 404;
+import com.ning.billing.recurly.model.push.account.AccountNotification;
 
-    private ErrorMessage404 error;
+public abstract class InvoiceNotification extends AccountNotification {
 
-    public NotFoundException(ErrorMessage404 error, String errorMessage, String url) {
-        super(errorMessage, url, STATUS_CODE);
-        this.error = error;
+    @XmlElement(name = "invoice")
+    private PushInvoice invoice;
+
+    public PushInvoice getInvoice() {
+        return invoice;
     }
 
-    public ErrorMessage404 getError() {
-        return error;
+    public void setInvoice(PushInvoice invoice) {
+        this.invoice = invoice;
     }
 }

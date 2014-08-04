@@ -64,7 +64,8 @@ public class TestSubscription extends TestModelBase {
         Assert.assertEquals(subscription.getCurrentPeriodEndsAt(), new DateTime("2010-07-27T07:00:00Z"));
         Assert.assertNull(subscription.getTrialStartedAt(), "");
         Assert.assertNull(subscription.getTrialEndsAt(), "");
-        Assert.assertNull(subscription.getAddOns());
+        Assert.assertNotNull(subscription.getAddOns());
+        Assert.assertEquals(subscription.getAddOns().size(), 0);
 
         // Verify nested attributes
         Assert.assertEquals(subscription.getAccount().getHref(), "https://api.recurly.com/v2/accounts/1");

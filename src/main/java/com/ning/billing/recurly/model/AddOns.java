@@ -14,21 +14,14 @@
  * under the License.
  */
 
-package com.ning.billing.recurly.model.exceptions;
+package com.ning.billing.recurly.model;
 
-import com.ning.billing.recurly.model.errors.ErrorMessage404;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
-public class NotFoundException extends CommonRequestException {
-    private static final int STATUS_CODE = 404;
+@XmlRootElement(name = "subscription_add_on")
+public class AddOns extends RecurlyObjects<AddOn> {
 
-    private ErrorMessage404 error;
-
-    public NotFoundException(ErrorMessage404 error, String errorMessage, String url) {
-        super(errorMessage, url, STATUS_CODE);
-        this.error = error;
-    }
-
-    public ErrorMessage404 getError() {
-        return error;
-    }
+    @XmlTransient
+    public static final String ADDONS_RESOURCE = "/addons";
 }

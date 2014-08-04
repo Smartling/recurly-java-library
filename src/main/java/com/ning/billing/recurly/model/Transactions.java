@@ -21,6 +21,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 /**
  * @author Kristian.foster@gmail.com
  */
@@ -30,4 +32,10 @@ public class Transactions extends RecurlyObjects<Transaction> {
 
     @XmlTransient
     public static final String TRANSACTIONS_RESOURCE = "/transactions";
+
+    @Override
+    @JsonSetter(value = "transaction")
+    public void setRecurlyObject(Transaction value) {
+        super.setRecurlyObject(value);
+    }
 }

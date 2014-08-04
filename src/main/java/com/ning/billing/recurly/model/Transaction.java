@@ -19,7 +19,6 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.xml.bind.annotation.XmlTransient;
 import org.joda.time.DateTime;
 
 @XmlRootElement(name = "transaction")
@@ -100,6 +99,9 @@ public class Transaction extends AbstractTransaction {
     @XmlElement(name = "description")
     private String description;
 
+    @XmlElement(name = "recurring")
+    private Boolean recurring;
+
     public Account getAccount() {
         return account;
     }
@@ -164,6 +166,14 @@ public class Transaction extends AbstractTransaction {
         this.description = description;
     }
 
+    public Boolean getRecurring() {
+        return recurring;
+    }
+
+    public void setRecurring(final Object recurring) {
+        this.recurring = booleanOrNull(recurring);
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -183,6 +193,7 @@ public class Transaction extends AbstractTransaction {
         sb.append(", refundable=").append(refundable);
         sb.append(", createdAt=").append(createdAt);
         sb.append(", description=").append(description);
+        sb.append(", recurring=").append(recurring);
         sb.append('}');
         return sb.toString();
     }
@@ -223,6 +234,10 @@ public class Transaction extends AbstractTransaction {
             return false;
         }
 
+        if (recurring != null ? !recurring.equals(that.recurring) : that.recurring != null) {
+            return false;
+        }
+
         return true;
     }
 
@@ -236,6 +251,7 @@ public class Transaction extends AbstractTransaction {
         result = 31 * result + (taxInCents != null ? taxInCents.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
+        result = 31 * result + (recurring != null ? recurring.hashCode() : 0);
         return result;
     }
 }

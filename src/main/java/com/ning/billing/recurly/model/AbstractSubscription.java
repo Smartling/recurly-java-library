@@ -35,7 +35,7 @@ public class AbstractSubscription extends RecurlyObject {
 
     @XmlElementWrapper(name = "subscription_add_ons")
     @XmlElement(name = "subscription_add_on")
-    protected List<AddOn> addOns;
+    protected AddOns addOns;
 
     @XmlElement(name = "plan_code")
     private String planCode;
@@ -64,11 +64,11 @@ public class AbstractSubscription extends RecurlyObject {
         this.quantity = integerOrNull(quantity);
     }
 
-    public List<AddOn> getAddOns() {
+    public AddOns getAddOns() {
         return addOns;
     }
 
-    public void setAddOns(final List<AddOn> addOns) {
+    public void setAddOns(final AddOns addOns) {
         this.addOns = addOns;
     }
 

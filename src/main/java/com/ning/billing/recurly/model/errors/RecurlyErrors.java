@@ -16,23 +16,17 @@
 
 package com.ning.billing.recurly.model.errors;
 
-import com.ning.billing.recurly.model.RecurlyObject;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.ning.billing.recurly.model.RecurlyObjects;
+
 @XmlRootElement(name = "errors")
-public class Error404 extends RecurlyObject
+public class RecurlyErrors extends RecurlyObjects<RecurlyError>
 {
-    @XmlElement(name = "error")
-    private String error;
-
-    public String getError()
-    {
-        return error;
-    }
-
-    public void setError(final String error)
-    {
-        this.error = error;
+    @Override
+    @JsonSetter(value = "error")
+    public void setRecurlyObject(RecurlyError value) {
+        super.setRecurlyObject(value);
     }
 }

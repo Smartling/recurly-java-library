@@ -23,9 +23,24 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.recurly.model.RecurlyObject;
-
 import com.google.common.base.CaseFormat;
+import com.ning.billing.recurly.model.RecurlyObject;
+import com.ning.billing.recurly.model.push.account.BillingInfoUpdatedNotification;
+import com.ning.billing.recurly.model.push.account.CanceledAccountNotification;
+import com.ning.billing.recurly.model.push.account.NewAccountNotification;
+import com.ning.billing.recurly.model.push.invoice.ClosedInvoiceNotification;
+import com.ning.billing.recurly.model.push.invoice.NewInvoiceNotification;
+import com.ning.billing.recurly.model.push.invoice.PastDueInvoiceNotification;
+import com.ning.billing.recurly.model.push.payment.FailedPaymentNotification;
+import com.ning.billing.recurly.model.push.payment.SuccessfulPaymentNotification;
+import com.ning.billing.recurly.model.push.payment.SuccessfulRefundNotification;
+import com.ning.billing.recurly.model.push.payment.VoidedPaymentNotification;
+import com.ning.billing.recurly.model.push.subscription.CanceledSubscriptionNotification;
+import com.ning.billing.recurly.model.push.subscription.ExpiredSubscriptionNotification;
+import com.ning.billing.recurly.model.push.subscription.NewSubscriptionNotification;
+import com.ning.billing.recurly.model.push.subscription.ReactivatedAccountNotification;
+import com.ning.billing.recurly.model.push.subscription.RenewedSubscriptionNotification;
+import com.ning.billing.recurly.model.push.subscription.UpdatedSubscriptionNotification;
 
 public abstract class Notification extends RecurlyObject {
 
@@ -33,19 +48,22 @@ public abstract class Notification extends RecurlyObject {
     private static Pattern ROOT_NAME = Pattern.compile("<([0-9A-Z_a-z]*_notification)>");
 
     public static enum Type {
-        BillingInfoUpdatedNotification(com.ning.billing.recurly.model.push.account.BillingInfoUpdatedNotification.class),
-        CanceledAccountNotification(com.ning.billing.recurly.model.push.account.CanceledAccountNotification.class),
-        NewAccountNotification(com.ning.billing.recurly.model.push.account.NewAccountNotification.class),
-        FailedPaymentNotification(com.ning.billing.recurly.model.push.payment.FailedPaymentNotification.class),
-        SuccessfulPaymentNotification(com.ning.billing.recurly.model.push.payment.SuccessfulPaymentNotification.class),
-        SuccessfulRefundNotification(com.ning.billing.recurly.model.push.payment.SuccessfulRefundNotification.class),
-        VoidedPaymentNotification(com.ning.billing.recurly.model.push.payment.VoidedPaymentNotification.class),
-        CanceledSubscriptionNotification(com.ning.billing.recurly.model.push.subscription.CanceledSubscriptionNotification.class),
-        ExpiredSubscriptionNotification(com.ning.billing.recurly.model.push.subscription.ExpiredSubscriptionNotification.class),
-        NewSubscriptionNotification(com.ning.billing.recurly.model.push.subscription.NewSubscriptionNotification.class),
-        ReactivatedAccountNotification(com.ning.billing.recurly.model.push.subscription.ReactivatedAccountNotification.class),
-        RenewedSubscriptionNotification(com.ning.billing.recurly.model.push.subscription.RenewedSubscriptionNotification.class),
-        UpdatedSubscriptionNotification(com.ning.billing.recurly.model.push.subscription.UpdatedSubscriptionNotification.class),;
+        BillingInfoUpdatedNotification(BillingInfoUpdatedNotification.class),
+        CanceledAccountNotification(CanceledAccountNotification.class),
+        NewAccountNotification(NewAccountNotification.class),
+        FailedPaymentNotification(FailedPaymentNotification.class),
+        SuccessfulPaymentNotification(SuccessfulPaymentNotification.class),
+        SuccessfulRefundNotification(SuccessfulRefundNotification.class),
+        VoidedPaymentNotification(VoidedPaymentNotification.class),
+        CanceledSubscriptionNotification(CanceledSubscriptionNotification.class),
+        ExpiredSubscriptionNotification(ExpiredSubscriptionNotification.class),
+        NewSubscriptionNotification(NewSubscriptionNotification.class),
+        ReactivatedAccountNotification(ReactivatedAccountNotification.class),
+        RenewedSubscriptionNotification(RenewedSubscriptionNotification.class),
+        UpdatedSubscriptionNotification(UpdatedSubscriptionNotification.class),
+        NewInvoiceNotification(NewInvoiceNotification.class),
+        ClosedInvoiceNotification(ClosedInvoiceNotification.class),
+        PastDueInvoiceNotification(PastDueInvoiceNotification.class);
 
         private Class<? extends Notification> javaType;
 

@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlValue;
 
 import org.joda.time.DateTime;
 
@@ -372,77 +371,62 @@ public class Plan extends RecurlyObject {
 
         // United States Dollars
         @XmlElement(name = "USD")
-        @XmlValue
         private Integer unitAmountUSD;
 
         // Australian Dollars
         @XmlElement(name = "AUD")
-        @XmlValue
         private Integer unitAmountAUD;
 
         // Canadian Dollars
         @XmlElement(name = "CAD")
-        @XmlValue
         private Integer unitAmountCAD;
 
         // Euros
         @XmlElement(name = "EUR")
-        @XmlValue
         private Integer unitAmountEUR;
 
         // British Pounds
         @XmlElement(name = "GBP")
-        @XmlValue
         private Integer unitAmountGBP;
 
         // Czech Korunas
         @XmlElement(name = "CZK")
-        @XmlValue
         private Integer unitAmountCZK;
 
         // Danish Krones
         @XmlElement(name = "DKK")
-        @XmlValue
         private Integer unitAmountDKK;
 
         // Hungarian Forints
         @XmlElement(name = "HUF")
-        @XmlValue
         private Integer unitAmountHUF;
 
         // Norwegian Krones
         @XmlElement(name = "NOK")
-        @XmlValue
         private Integer unitAmountNOK;
 
         // New Zealand Dollars
         @XmlElement(name = "NZD")
-        @XmlValue
         private Integer unitAmountNZD;
 
         // Polish Zloty
         @XmlElement(name = "PLN")
-        @XmlValue
         private Integer unitAmountPLN;
 
         // Singapore Dollars
         @XmlElement(name = "SGD")
-        @XmlValue
         private Integer unitAmountSGD;
 
         // Swedish Kronas
         @XmlElement(name = "SEK")
-        @XmlValue
         private Integer unitAmountSEK;
 
         // Swiss Francs
         @XmlElement(name = "CHF")
-        @XmlValue
         private Integer unitAmountCHF;
 
         // South African Rand
         @XmlElement(name = "ZAR")
-        @XmlValue
         private Integer unitAmountZAR;
 
         public Integer getUnitAmountUSD() {

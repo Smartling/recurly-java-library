@@ -18,12 +18,19 @@ package com.ning.billing.recurly.model;
 
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 /**
  * Container for a collection of objects (e.g. accounts, coupons, plans, ...)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public abstract class RecurlyObjects<T extends RecurlyObject> extends ArrayList<T> {
 
+    @JsonSetter
+    public void setRecurlyObject(final T value) {
+        add(value);
+    }
 }

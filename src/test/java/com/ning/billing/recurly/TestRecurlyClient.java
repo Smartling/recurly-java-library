@@ -39,6 +39,8 @@ import com.ning.billing.recurly.model.SubscriptionUpdate;
 import com.ning.billing.recurly.model.Subscriptions;
 import com.ning.billing.recurly.model.Transaction;
 import com.ning.billing.recurly.model.Transactions;
+import com.ning.billing.recurly.model.exceptions.RecurlyException;
+import com.ning.billing.recurly.model.exceptions.TransactionException;
 
 import static com.ning.billing.recurly.TestUtils.randomString;
 
@@ -47,6 +49,9 @@ public class TestRecurlyClient {
     public static final String RECURLY_PAGE_SIZE = "recurly.page.size";
     public static final String KILLBILL_PAYMENT_RECURLY_API_KEY = "killbill.payment.recurly.apiKey";
     public static final String KILLBILL_PAYMENT_RECURLY_DEFAULT_CURRENCY_KEY = "killbill.payment.recurly.currency";
+    public static final String KILLBILL_PAYMENT_RECURLY_HOST = "killbill.payment.recurly.host";
+    public static final String KILLBILL_PAYMENT_RECURLY_PORT = "killbill.payment.recurly.port";
+    public static final String KILLBILL_PAYMENT_RECURLY_VERSION = "killbill.payment.recurly.version";
 
     private static final Logger log = LoggerFactory.getLogger(TestRecurlyClient.class);
 
@@ -63,8 +68,14 @@ public class TestRecurlyClient {
             Assert.fail("You need to set your Recurly api key to run integration tests:" +
                         " -Dkillbill.payment.recurly.apiKey=...");
         }
-
-        recurlyClient = new RecurlyClient(apiKey);
+        final String host = System.getProperty(KILLBILL_PAYMENT_RECURLY_HOST);
+        final String port = System.getProperty(KILLBILL_PAYMENT_RECURLY_PORT);
+        final String version = System.getProperty(KILLBILL_PAYMENT_RECURLY_VERSION);
+        if(null != host && null != port && null != version) {
+            recurlyClient = new RecurlyClient(apiKey, host, Integer.valueOf(port), version);
+        } else {
+            recurlyClient = new RecurlyClient(apiKey);
+        }
         recurlyClient.open();
     }
 
@@ -171,9 +182,11 @@ public class TestRecurlyClient {
             // Delete the plan
             recurlyClient.deletePlan(planData.getPlanCode());
             // Check that we deleted it
-            final Plan retrievedPlan2 = recurlyClient.getPlan(planData.getPlanCode());
-            if (null != retrievedPlan2) {
+            try {
+                recurlyClient.getPlan(planData.getPlanCode());
                 Assert.fail("Failed to delete the Plan");
+            } catch (RecurlyException e) {
+                //plan is deleted
             }
         }
     }
@@ -380,6 +393,7 @@ public class TestRecurlyClient {
         Assert.assertEquals(coupon.getCouponCode(), c.getCouponCode());
         Assert.assertEquals(coupon.getDiscountType(), c.getDiscountType());
         Assert.assertEquals(coupon.getDiscountPercent(), c.getDiscountPercent());
+        recurlyClient.deleteCoupon(c.getCouponCode());
     }
 
     @Test(groups = "integration")
@@ -410,7 +424,6 @@ public class TestRecurlyClient {
             subscriptionData.setAccount(accountData);
             subscriptionData.setCurrency(CURRENCY);
             subscriptionData.setUnitAmountInCents(1242);
-            final DateTime creationDateTime = new DateTime(DateTimeZone.UTC);
             final Subscription subscription = recurlyClient.createSubscription(subscriptionData);
 
             // Test subscription creation
@@ -436,6 +449,39 @@ public class TestRecurlyClient {
             // Delete the Plans
             recurlyClient.deletePlan(planData.getPlanCode());
             recurlyClient.deletePlan(plan2Data.getPlanCode());
+        }
+    }
+
+    @Test(groups = "integration")
+    public void testGetEmptySubscriptions() {
+        final Account accountData = TestUtils.createRandomAccount();
+        recurlyClient.createAccount(accountData);
+
+        try {
+            final Subscriptions subscriptions = recurlyClient.getAccountSubscriptions(accountData.getAccountCode(), "active");
+            Assert.assertEquals(subscriptions.size(), 0);
+        } finally {
+            recurlyClient.closeAccount(accountData.getAccountCode());
+        }
+    }
+
+    @Test(groups = "integration", expectedExceptions = {TransactionException.class})
+    public void testCreateTransactionWithTransactionException() {
+        final Account account = TestUtils.createRandomAccount();
+        recurlyClient.createAccount(account);
+        final BillingInfo billingInfo = TestUtils.createRandomBillingInfo();
+        //see https://docs.recurly.com/payment-gateways/test
+        billingInfo.setNumber("4000-0000-0000-0077");
+        final Transaction transaction = new Transaction();
+        account.setBillingInfo(billingInfo);
+        billingInfo.setAccount(null);
+        transaction.setAccount(account);
+        transaction.setAmountInCents(100);
+        transaction.setCurrency("USD");
+        try {
+            recurlyClient.createTransaction(transaction);
+        } finally {
+            recurlyClient.closeAccount(account.getAccountCode());
         }
     }
 }

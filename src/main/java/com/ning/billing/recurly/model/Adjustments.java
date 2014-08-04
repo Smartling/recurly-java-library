@@ -19,9 +19,17 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 @XmlRootElement(name = "adjustments")
 public class Adjustments extends RecurlyObjects<Adjustment> {
 
     @XmlTransient
     public static final String INVOICES_RESOURCE = "/adjustments";
+
+    
+    @JsonSetter(value = "adjustment")
+    public void setRecurlyObject(final Adjustment value) {
+        super.setRecurlyObject(value);
+    }
 }

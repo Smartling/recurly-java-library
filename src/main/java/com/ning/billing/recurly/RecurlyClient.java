@@ -16,15 +16,10 @@
 
 package com.ning.billing.recurly;
 
-import com.ning.billing.recurly.model.errors.Error404;
-import com.ning.billing.recurly.model.errors.ErrorMessage404;
-import com.ning.billing.recurly.model.exceptions.NotFoundException;
-import com.ning.billing.recurly.model.exceptions.RecurlyException;
-import com.ning.billing.recurly.model.exceptions.RequestException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,6 +33,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.ning.billing.recurly.model.Account;
 import com.ning.billing.recurly.model.Accounts;
 import com.ning.billing.recurly.model.AddOn;
@@ -54,14 +50,17 @@ import com.ning.billing.recurly.model.SubscriptionUpdate;
 import com.ning.billing.recurly.model.Subscriptions;
 import com.ning.billing.recurly.model.Transaction;
 import com.ning.billing.recurly.model.Transactions;
+import com.ning.billing.recurly.model.errors.ErrorMessage404;
+import com.ning.billing.recurly.model.errors.Errors;
+import com.ning.billing.recurly.model.exceptions.CommonRequestException;
+import com.ning.billing.recurly.model.exceptions.NotFoundException;
+import com.ning.billing.recurly.model.exceptions.RecurlyException;
+import com.ning.billing.recurly.model.exceptions.RequestException;
+import com.ning.billing.recurly.model.exceptions.TransactionException;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
-import org.slf4j.MDC;
-import org.slf4j.impl.StaticMDCBinder;
 
 public class RecurlyClient {
 
@@ -156,7 +155,7 @@ public class RecurlyClient {
     private AsyncHttpClient client;
 
     private String instanceIdentifier;
-    private Set<String> hideXMLResponseNodeValues;
+    private Set<String> hideXMLResponseNodeValues = new HashSet<String>();
 
     public RecurlyClient(final String apiKey) {
         this(apiKey, "api.recurly.com", 443, "v2");
@@ -462,6 +461,16 @@ public class RecurlyClient {
     }
 
     /**
+     * Lookup a transaction
+     *
+     * @param transactionId recurly transaction id
+     * @return the transaction if found, null otherwise
+     */
+    public Transaction getTransaction(final String transactionId) {
+        return doGET(Transactions.TRANSACTIONS_RESOURCE + "/" + transactionId, Transaction.class);
+    }
+
+    /**
      * Creates a {@link Transaction} throgh the Recurly API.
      *
      * @param trans The {@link Transaction} to create
@@ -634,6 +643,16 @@ public class RecurlyClient {
      */
     public Coupon getCoupon(final String couponCode) {
         return doGET(Coupon.COUPON_RESOURCE + "/" + couponCode, Coupon.class);
+    }
+
+    /**
+     * Delete a {@link Coupon}
+     * <p/>
+     *
+     * @param couponCode The code for the {@link Coupon}
+     */
+    public void deleteCoupon(final String couponCode) {
+        doDELETE(Coupon.COUPON_RESOURCE + "/" + couponCode);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -822,7 +841,7 @@ public class RecurlyClient {
 
                                                                                  logHttpErrorMessage(anotherLog, getLogHttpMessage(statusCode, responseUri, responseBody));
 
-                                                                                 RequestException exception = getRequestException(statusCode, responseBody, responseUri);
+                                                                                 RecurlyException exception = getRecurlyException(statusCode, responseBody, responseUri);
 
                                                                                  httpResponseContainer.setException(exception);
 
@@ -835,7 +854,7 @@ public class RecurlyClient {
 
                                                                              if (clazz == null)
                                                                              {
-                                                                                 return null;
+                                                                                 return httpResponseContainer;
                                                                              }
 
                                                                              final InputStream in = response.getResponseBodyAsStream();
@@ -884,33 +903,23 @@ public class RecurlyClient {
         }
     }
 
-    private RequestException getRequestException(int statusCode, String responseBody, String url)
-    {
-        String errorMessage = null;
-
-        switch (statusCode)
-        {
-            case 404:
-            {
-                try
-                {
-                    ErrorMessage404 errorObject = xmlMapper.readValue(responseBody, ErrorMessage404.class);
-                    if (null != errorObject.getDescription())
-                        errorMessage = errorObject.getDescription();
-                    else
-                    {
-                        Error404 errorObjectAnother = xmlMapper.readValue(responseBody, Error404.class);
-                        errorMessage = errorObjectAnother.getError();
-                    }
-                }
-                catch (Exception exceptionMapping)
-                {
-                    errorMessage = responseBody;
-                }
-                return new NotFoundException(errorMessage, url);
+    private RecurlyException getRecurlyException(int statusCode, String responseBody, String url) {
+        if (404 == statusCode) {
+            try {
+                ErrorMessage404 errorObject = xmlMapper.readValue(responseBody, ErrorMessage404.class);
+                return new NotFoundException(errorObject, responseBody, url);
+            } catch (Exception exceptionMapping) {
+                //Not ErrorMessage404
             }
-            default:
-                return new RequestException(responseBody, url, statusCode);
+        }
+        try {
+            Errors errors = xmlMapper.readValue(responseBody, Errors.class);
+            if (null != errors.getTransactionError() || null != errors.getTransaction()) {
+                return new TransactionException(errors, responseBody, url, statusCode);
+            }
+            return new RequestException(errors, responseBody, url, statusCode);
+        } catch (Exception exception) {
+            return new CommonRequestException(responseBody, url, statusCode);
         }
     }
 

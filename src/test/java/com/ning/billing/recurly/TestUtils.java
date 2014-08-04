@@ -16,14 +16,13 @@
 
 package com.ning.billing.recurly;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.recurly.model.Account;
 import com.ning.billing.recurly.model.AddOn;
+import com.ning.billing.recurly.model.AddOns;
 import com.ning.billing.recurly.model.BillingInfo;
 import com.ning.billing.recurly.model.Plan;
 import com.ning.billing.recurly.model.Subscription;
@@ -257,7 +256,7 @@ public class TestUtils {
         sub.setCurrentPeriodEndsAt(DateTime.now());
         sub.setTrialStartedAt(DateTime.now());
         sub.setTrialEndsAt(DateTime.now());
-        final List<AddOn> addOns = new ArrayList<AddOn>();
+        final AddOns addOns = new AddOns();
         for (int i = 0; i < randomInteger(10); i++) {
             addOns.add(createRandomAddOn());
         }

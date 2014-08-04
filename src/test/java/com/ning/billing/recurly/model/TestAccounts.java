@@ -44,7 +44,7 @@ public class TestAccounts extends TestModelBase {
                                     "    <hosted_login_token>a92468579e9c4231a6c0031c4716c01d</hosted_login_token>\n" +
                                     "    <created_at type=\"datetime\">2011-10-25T12:00:00</created_at>\n" +
                                     "  </account>\n" +
-//                                    "  <!-- Continued... -->\n" +
+                                    "  <!-- Continued... -->\n" +
                                     "</accounts>";
 
         final Accounts accounts = xmlMapper.readValue(accountsData, Accounts.class);

@@ -14,29 +14,20 @@
  * under the License.
  */
 
-
 package com.ning.billing.recurly.model.exceptions;
 
-public class RequestException extends RecurlyException
-{
-    public static final String URL_MESSAGE = "Recurly error while calling: %s\n";
-    public static final String BODY_MESSAGE = "Recurly error: error code %d (%s)";
+import com.ning.billing.recurly.model.errors.Errors;
 
-    private String url;
-    private String errorMessage;
-    private int statusCode;
+public class RequestException extends CommonRequestException {
 
+    private Errors errors;
 
-    public RequestException(String errorMessage, String url, int statusCode)
-    {
-        super();
-        this.url = url;
-        this.errorMessage = errorMessage;
-        this.statusCode = statusCode;
+    public RequestException(Errors errors, String errorMessage, String url, int statusCode) {
+        super(errorMessage, url, statusCode);
+        this.errors = errors;
     }
 
-    @Override
-    public String getMessage() {
-        return String.format(URL_MESSAGE, url) + String.format(BODY_MESSAGE, statusCode, errorMessage);
+    public Errors getErrors() {
+        return errors;
     }
 }

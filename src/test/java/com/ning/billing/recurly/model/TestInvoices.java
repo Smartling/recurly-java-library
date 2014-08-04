@@ -73,7 +73,7 @@ public class TestInvoices extends TestModelBase {
         Assert.assertEquals(invoice.getState(), "open");
         Assert.assertEquals((int) invoice.getInvoiceNumber(), 1005);
         Assert.assertNull(invoice.getPoNumber());
-        Assert.assertNull(invoice.getVarNumber());
+        Assert.assertNull(invoice.getVatNumber());
         Assert.assertEquals((int) invoice.getSubtotalInCents(), 1200);
         Assert.assertEquals((int) invoice.getTaxInCents(), 0);
         Assert.assertEquals((int) invoice.getTotalInCents(), 1200);
@@ -81,6 +81,7 @@ public class TestInvoices extends TestModelBase {
         Assert.assertEquals(invoice.getCreatedAt(), new DateTime("2011-08-25T12:00:00Z"));
         Assert.assertNotNull(invoice.getLineItems());
         Assert.assertEquals(invoice.getLineItems().size(), 1);
-        Assert.assertNull(invoice.getTransactions());
+        Assert.assertNotNull(invoice.getTransactions());
+        Assert.assertEquals(invoice.getTransactions().size(), 0);
     }
 }

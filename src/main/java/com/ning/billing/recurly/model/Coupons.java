@@ -19,9 +19,17 @@ package com.ning.billing.recurly.model;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 @XmlRootElement(name = "coupons")
 public class Coupons extends RecurlyObjects<Coupon> {
 
     @XmlTransient
     public static final String COUPONS_RESOURCE = "/coupons";
+    
+    @Override
+    @JsonSetter(value = "coupon")
+    public void setRecurlyObject(Coupon value) {
+        super.setRecurlyObject(value);
+    }
 }

@@ -39,6 +39,7 @@ public class TestSubscriptionUpdate extends TestModelBase {
         Assert.assertEquals(subscription.getPlanCode(), "gold");
         Assert.assertEquals(subscription.getUnitAmountInCents(), (Integer) 800);
         Assert.assertEquals(subscription.getQuantity(), (Integer) 1);
-        Assert.assertNull(subscription.getAddOns());
+        Assert.assertNotNull(subscription.getAddOns());
+        Assert.assertEquals(subscription.getAddOns().size(), 0);
     }
 }

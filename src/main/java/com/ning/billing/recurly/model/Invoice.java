@@ -19,16 +19,13 @@ package com.ning.billing.recurly.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
-import java.util.regex.Matcher;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import javax.xml.bind.annotation.XmlTransient;
 import org.joda.time.DateTime;
 
-@XmlRootElement(name = "invoice")
-public class Invoice extends RecurlyObject {
+public class Invoice extends AbstractInvoice {
 
     @XmlTransient
     private String href;
@@ -36,43 +33,22 @@ public class Invoice extends RecurlyObject {
     @XmlElement(name = "account")
     private Account account;
 
-    @XmlElement(name = "uuid")
-    private String uuid;
-
-    @XmlElement(name = "state")
-    private String state;
-
-    @XmlElement(name = "invoice_number")
-    private Integer invoiceNumber;
-
-    @XmlElement(name = "po_number")
-    private Integer poNumber;
-
-    @XmlElement(name = "vat_number")
-    private Integer varNumber;
-
     @XmlElement(name = "subtotal_in_cents")
     private Integer subtotalInCents;
 
     @XmlElement(name = "tax_in_cents")
     private Integer taxInCents;
 
-    @XmlElement(name = "total_in_cents")
-    private Integer totalInCents;
-
-    @XmlElement(name = "currency")
-    private String currency;
-
     @XmlElement(name = "created_at")
     private DateTime createdAt;
 
     @XmlElementWrapper(name = "line_items")
     @XmlElement(name = "adjustment")
-    private List<Adjustment> adjustments;
+    private Adjustments adjustments;
 
     @XmlElementWrapper(name = "transactions")
     @XmlElement(name = "transaction")
-    private List<Transaction> transactions;
+    private Transactions transactions;
 
     public Account getAccount() {
         return account;
@@ -80,46 +56,6 @@ public class Invoice extends RecurlyObject {
 
     public void setAccount(final Account account) {
         this.account = account;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(final Object uuid) {
-        this.uuid = stringOrNull(uuid);
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(final Object state) {
-        this.state = stringOrNull(state);
-    }
-
-    public Integer getInvoiceNumber() {
-        return invoiceNumber;
-    }
-
-    public void setInvoiceNumber(final Object invoiceNumber) {
-        this.invoiceNumber = integerOrNull(invoiceNumber);
-    }
-
-    public Integer getPoNumber() {
-        return poNumber;
-    }
-
-    public void setPoNumber(final Object poNumber) {
-        this.poNumber = integerOrNull(poNumber);
-    }
-
-    public Integer getVarNumber() {
-        return varNumber;
-    }
-
-    public void setVarNumber(final Object varNumber) {
-        this.varNumber = integerOrNull(varNumber);
     }
 
     public Integer getSubtotalInCents() {
@@ -138,22 +74,6 @@ public class Invoice extends RecurlyObject {
         this.taxInCents = integerOrNull(taxInCents);
     }
 
-    public Integer getTotalInCents() {
-        return totalInCents;
-    }
-
-    public void setTotalInCents(final Object totalInCents) {
-        this.totalInCents = integerOrNull(totalInCents);
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(final Object currency) {
-        this.currency = stringOrNull(currency);
-    }
-
     public DateTime getCreatedAt() {
         return createdAt;
     }
@@ -162,19 +82,19 @@ public class Invoice extends RecurlyObject {
         this.createdAt = dateTimeOrNull(createdAt);
     }
 
-    public List<Adjustment> getLineItems() {
+    public Adjustments getLineItems() {
         return adjustments;
     }
 
-    public void setLineItems(final List<Adjustment> adjustments) {
+    public void setLineItems(final Adjustments adjustments) {
         this.adjustments = adjustments;
     }
 
-    public List<Transaction> getTransactions() {
+    public Transactions getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(final List<Transaction> transactions) {
+    public void setTransactions(final Transactions transactions) {
         this.transactions = transactions;
     }
 
@@ -192,15 +112,15 @@ public class Invoice extends RecurlyObject {
         final StringBuilder sb = new StringBuilder();
         sb.append("Invoice");
         sb.append("{account=").append(account);
-        sb.append(", uuid='").append(uuid).append('\'');
-        sb.append(", state='").append(state).append('\'');
-        sb.append(", invoiceNumber=").append(invoiceNumber);
-        sb.append(", poNumber=").append(poNumber);
-        sb.append(", varNumber=").append(varNumber);
+        sb.append(", uuid='").append(getUuid()).append('\'');
+        sb.append(", state='").append(getState()).append('\'');
+        sb.append(", invoiceNumber=").append(getInvoiceNumber());
+        sb.append(", poNumber=").append(getPoNumber());
+        sb.append(", vatNumber=").append(getVatNumber());
         sb.append(", subtotalInCents=").append(subtotalInCents);
         sb.append(", taxInCents=").append(taxInCents);
-        sb.append(", totalInCents=").append(totalInCents);
-        sb.append(", currency='").append(currency).append('\'');
+        sb.append(", totalInCents=").append(getTotalInCents());
+        sb.append(", currency='").append(getCurrency()).append('\'');
         sb.append(", createdAt=").append(createdAt);
         sb.append(", lineItems=").append(adjustments);
         sb.append(", transactions=").append(transactions);
@@ -213,7 +133,12 @@ public class Invoice extends RecurlyObject {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+
+        if (!(o instanceof Invoice)) {
+            return false;
+        }
+
+        if(!super.equals(o)) {
             return false;
         }
 
@@ -225,19 +150,7 @@ public class Invoice extends RecurlyObject {
         if (createdAt != null ? !createdAt.equals(invoice.createdAt) : invoice.createdAt != null) {
             return false;
         }
-        if (currency != null ? !currency.equals(invoice.currency) : invoice.currency != null) {
-            return false;
-        }
-        if (invoiceNumber != null ? !invoiceNumber.equals(invoice.invoiceNumber) : invoice.invoiceNumber != null) {
-            return false;
-        }
         if (adjustments != null ? !adjustments.equals(invoice.adjustments) : invoice.adjustments != null) {
-            return false;
-        }
-        if (poNumber != null ? !poNumber.equals(invoice.poNumber) : invoice.poNumber != null) {
-            return false;
-        }
-        if (state != null ? !state.equals(invoice.state) : invoice.state != null) {
             return false;
         }
         if (subtotalInCents != null ? !subtotalInCents.equals(invoice.subtotalInCents) : invoice.subtotalInCents != null) {
@@ -246,16 +159,7 @@ public class Invoice extends RecurlyObject {
         if (taxInCents != null ? !taxInCents.equals(invoice.taxInCents) : invoice.taxInCents != null) {
             return false;
         }
-        if (totalInCents != null ? !totalInCents.equals(invoice.totalInCents) : invoice.totalInCents != null) {
-            return false;
-        }
         if (transactions != null ? !transactions.equals(invoice.transactions) : invoice.transactions != null) {
-            return false;
-        }
-        if (uuid != null ? !uuid.equals(invoice.uuid) : invoice.uuid != null) {
-            return false;
-        }
-        if (varNumber != null ? !varNumber.equals(invoice.varNumber) : invoice.varNumber != null) {
             return false;
         }
 
@@ -264,19 +168,14 @@ public class Invoice extends RecurlyObject {
 
     @Override
     public int hashCode() {
-        int result = account != null ? account.hashCode() : 0;
-        result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
-        result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
-        result = 31 * result + (poNumber != null ? poNumber.hashCode() : 0);
-        result = 31 * result + (varNumber != null ? varNumber.hashCode() : 0);
-        result = 31 * result + (subtotalInCents != null ? subtotalInCents.hashCode() : 0);
-        result = 31 * result + (taxInCents != null ? taxInCents.hashCode() : 0);
-        result = 31 * result + (totalInCents != null ? totalInCents.hashCode() : 0);
-        result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
-        result = 31 * result + (adjustments != null ? adjustments.hashCode() : 0);
-        result = 31 * result + (transactions != null ? transactions.hashCode() : 0);
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + (account != null ? account.hashCode() : 0);
+        result = prime * result + (subtotalInCents != null ? subtotalInCents.hashCode() : 0);
+        result = prime * result + (taxInCents != null ? taxInCents.hashCode() : 0);
+        result = prime * result + (createdAt != null ? createdAt.hashCode() : 0);
+        result = prime * result + (adjustments != null ? adjustments.hashCode() : 0);
+        result = prime * result + (transactions != null ? transactions.hashCode() : 0);
         return result;
     }
 }
