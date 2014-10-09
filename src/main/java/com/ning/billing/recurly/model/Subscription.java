@@ -66,6 +66,9 @@ public class Subscription extends AbstractSubscription {
     @XmlElement(name = "trial_ends_at")
     private DateTime trialEndsAt;
 
+    @XmlElement(name = "pending_subscription")
+    private Subscription pendingSubscription;
+
     public Account getAccount() {
         return account;
     }
@@ -162,6 +165,14 @@ public class Subscription extends AbstractSubscription {
         this.trialEndsAt = dateTimeOrNull(trialEndsAt);
     }
 
+    public Subscription getPendingSubscription() {
+        return pendingSubscription;
+    }
+
+    public void setPendingSubscription(final Subscription pendingSubscription) {
+        this.pendingSubscription = pendingSubscription;
+    }
+
     @JsonIgnore
     public String getHref() {
         return href;
@@ -195,6 +206,7 @@ public class Subscription extends AbstractSubscription {
         sb.append(", trialStartedAt=").append(trialStartedAt);
         sb.append(", trialEndsAt=").append(trialEndsAt);
         sb.append(", addOns=").append(addOns);
+        sb.append(", pendingSubscription=").append(pendingSubscription);
         sb.append('}');
         return sb.toString();
     }
@@ -258,6 +270,9 @@ public class Subscription extends AbstractSubscription {
             return false;
         }
 
+        if (pendingSubscription != null ? !pendingSubscription.equals(that.pendingSubscription) : that.pendingSubscription != null) {
+            return false;
+        }
         return true;
     }
 
@@ -278,6 +293,7 @@ public class Subscription extends AbstractSubscription {
         result = 31 * result + (trialStartedAt != null ? trialStartedAt.hashCode() : 0);
         result = 31 * result + (trialEndsAt != null ? trialEndsAt.hashCode() : 0);
         result = 31 * result + (addOns != null ? addOns.hashCode() : 0);
+        result = 31 * result + (pendingSubscription != null ? pendingSubscription.hashCode() : 0);
         return result;
     }
 }

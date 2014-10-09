@@ -46,6 +46,16 @@ public class TestSubscription extends TestModelBase {
                                         "  <trial_ends_at nil=\"nil\"></trial_ends_at>\n" +
                                         "  <subscription_add_ons type=\"array\">\n" +
                                         "  </subscription_add_ons>\n" +
+                                        "  <pending_subscription type=\"subscription\">\n" + 
+                                        "    <plan href=\"https://api.recurly.com/v2/plans/silver\">\n" + 
+                                        "    <plan_code>silver</plan_code>\n" + 
+                                        "    <name>Silver plan</name>\n" + 
+                                        "    </plan>\n" + 
+                                        "    <unit_amount_in_cents type=\"integer\">400</unit_amount_in_cents>\n" + 
+                                        "    <quantity type=\"integer\">1</quantity>\n" + 
+                                        "    <subscription_add_ons type=\"array\">\n" + 
+                                        "    </subscription_add_ons>\n" + 
+                                        "  </pending_subscription>\n" +
                                         "  <a name=\"cancel\" href=\"https://api.recurly.com/v2/subscriptions/44f83d7cba354d5b84812419f923ea96/cancel\" method=\"put\"/>\n" +
                                         "  <a name=\"terminate\" href=\"https://api.recurly.com/v2/subscriptions/44f83d7cba354d5b84812419f923ea96/terminate\" method=\"put\"/>\n" +
                                         "  <a name=\"postpone\" href=\"https://api.recurly.com/v2/subscriptions/44f83d7cba354d5b84812419f923ea96/postpone\" method=\"put\"/>\n" +
@@ -70,5 +80,14 @@ public class TestSubscription extends TestModelBase {
         // Verify nested attributes
         Assert.assertEquals(subscription.getAccount().getHref(), "https://api.recurly.com/v2/accounts/1");
         Assert.assertEquals(subscription.getAccount().getAccountCode(), "1");
+
+        Subscription pendingSubscription = subscription.getPendingSubscription();
+        Assert.assertNotNull(pendingSubscription);
+        Assert.assertNotNull(pendingSubscription.getPlan());
+        Assert.assertEquals(pendingSubscription.getPlan().getPlanCode(), "silver");
+        Assert.assertEquals(pendingSubscription.getPlan().getName(), "Silver plan");
+        Assert.assertEquals(pendingSubscription.getUnitAmountInCents(), (Integer) 400);
+        Assert.assertEquals(pendingSubscription.getQuantity(), (Integer) 1);
+        Assert.assertEquals(pendingSubscription.getAddOns().size(), 0);
     }
 }
