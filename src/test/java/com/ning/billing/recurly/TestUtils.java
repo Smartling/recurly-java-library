@@ -151,7 +151,6 @@ public class TestUtils {
         plan.setName(getRandomAlphaNumString(10));
         plan.setPlanIntervalLength(randomInteger(50) + 1);
         plan.setPlanIntervalUnit("months");
-        plan.setSetupFeeInCents(createRandomPrice());
         plan.setUnitAmountInCents(createRandomPrice());
 
         return plan;
@@ -162,7 +161,6 @@ public class TestUtils {
      */
     public static Plan createRandomPlan(final String currencyCode) {
         final Plan plan = createRandomPlan();
-        plan.setSetupFeeInCents(createRandomSinglePrice(currencyCode));
         plan.setUnitAmountInCents(createRandomSinglePrice(currencyCode));
 
         return plan;
@@ -181,7 +179,7 @@ public class TestUtils {
         price.setUnitAmountUSD(LifecycleTest.randomInteger(10));
         price.setUnitAmountSEK(LifecycleTest.randomInteger(10));
         */
-        price.setUnitAmountEUR(10);
+        price.setUnitAmountUSD(10);
 
         return price;
     }

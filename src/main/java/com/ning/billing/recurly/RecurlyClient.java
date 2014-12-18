@@ -839,7 +839,7 @@ public class RecurlyClient {
                                                                                  log.warn("Recurly error whilst calling: {}", responseUri);
                                                                                  log.warn("Recurly error: {}", hideResponseXMLNodeValues(responseBody));
 
-                                                                                 logHttpErrorMessage(anotherLog, getLogHttpMessage(statusCode, responseUri, responseBody));
+                                                                                 logHttpWarningMessage(anotherLog, getLogHttpMessage(statusCode, responseUri, responseBody));
 
                                                                                  RecurlyException exception = getRecurlyException(statusCode, responseBody, responseUri);
 

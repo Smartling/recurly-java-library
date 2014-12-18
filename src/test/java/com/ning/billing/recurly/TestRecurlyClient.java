@@ -16,6 +16,7 @@
 
 package com.ning.billing.recurly;
 
+import com.ning.billing.recurly.model.exceptions.NotFoundException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Minutes;
@@ -185,7 +186,7 @@ public class TestRecurlyClient {
             try {
                 recurlyClient.getPlan(planData.getPlanCode());
                 Assert.fail("Failed to delete the Plan");
-            } catch (RecurlyException e) {
+            } catch (NotFoundException e) {
                 //plan is deleted
             }
         }
