@@ -57,6 +57,7 @@ import com.ning.billing.recurly.model.exceptions.NotFoundException;
 import com.ning.billing.recurly.model.exceptions.RecurlyException;
 import com.ning.billing.recurly.model.exceptions.RequestException;
 import com.ning.billing.recurly.model.exceptions.TransactionException;
+import com.ning.billing.recurly.util.RecurlySslUtils;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -945,6 +946,14 @@ public class RecurlyClient {
         // Don't limit the number of connections per host
         // See https://github.com/ning/async-http-client/issues/issue/28
         final AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
+        try
+        {
+            builder.setSSLContext(RecurlySslUtils.getSSLContext());
+        }
+        catch (Exception e)
+        {
+            log.error("Failed to create SSLContext", e);
+        }
         builder.setMaximumConnectionsPerHost(-1);
         return new AsyncHttpClient(builder.build());
     }
